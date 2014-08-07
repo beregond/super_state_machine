@@ -1,6 +1,6 @@
-===============================
+===================
 Super State Machine
-===============================
+===================
 
 .. image:: https://badge.fury.io/py/super_state_machine.png
     :target: http://badge.fury.io/py/super_state_machine
@@ -15,7 +15,8 @@ Super State Machine
 Super State Machine gives you utilities to build finite state machines.
 
 * Free software: BSD license
-* Documentation: https://super_state_machine.readthedocs.org.
+* Documentation: https://super_state_machine.readthedocs.org
+* Source: https://github.com/beregond/super_state_machine
 
 Features
 --------
