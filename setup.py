@@ -11,14 +11,6 @@ except ImportError:
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
-requirements = [
-    # TODO: put package requirements here
-]
-
-test_requirements = [
-    # TODO: put package test requirements here
-]
-
 setup(
     name='super_state_machine',
     version='0.1.0',
@@ -33,7 +25,10 @@ setup(
     package_dir={'super_state_machine':
                  'super_state_machine'},
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=[
+        'enum34',
+        'six',
+    ],
     license="BSD",
     zip_safe=False,
     keywords='super_state_machine',
@@ -50,5 +45,4 @@ setup(
         'Programming Language :: Python :: 3.4',
     ],
     test_suite='tests',
-    tests_require=test_requirements
 )
