@@ -25,7 +25,11 @@ def state_setter(self, value):
 
 
 def state_deleter(self):
-    pass
+    if not self._meta['config_getter']('allow_empty'):
+        raise RuntimeError('State cannot be empty.')
+
+    attr = self._meta['state_attribute_name']
+    setattr(self, attr, None)
 
 
 def generate_checker(value):

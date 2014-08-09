@@ -7,16 +7,23 @@ import six
 
 from . import utils
 
-def _get_config(meta, attr):
-    try:
-        return getattr(meta, attr)
-    except AttributeError:
-        return getattr(DefaultMeta, attr)
+def _get_config(meta, attr, default=[]):
+    for m in [meta, DefaultMeta]:
+        try:
+            return getattr(m, attr)
+        except AttributeError:
+            pass
+
+    if isinstance(default, list):
+        raise
+
+    return default
 
 
 class DefaultMeta(object):
 
     states_enum_name = 'States'
+    allow_empty = True
 
 
 class StateMachineMetaclass(type):
@@ -33,7 +40,23 @@ class StateMachineMetaclass(type):
         new_meta = {}
 
         states_enum_name = get_config('states_enum_name')
-        states_enum = getattr(new_class, states_enum_name)
+
+        try:
+            states_enum = getattr(new_class, states_enum_name)
+        except AttributeError:
+            raise ValueError('No states enum given!')
+
+        proper = True
+        try:
+            if not issubclass(states_enum, Enum):
+                proper = False
+        except TypeError:
+            proper = False
+
+        if not proper:
+            raise ValueError(
+                'Please provide enum instance for available states.')
+
         states_enum = unique(states_enum)
 
         new_meta['states_enum'] = states_enum
@@ -42,20 +65,25 @@ class StateMachineMetaclass(type):
         state_name = 'state'
         new_state_name = '_' + state_name
         new_meta['state_attribute_name'] = new_state_name
-        state_value = None
+        state_value = get_config('initial_state', None)
+        if not state_value:
+            try:
+                state_value = getattr(new_class, state_name)
+            except AttributeError:
+                pass
 
-        try:
-            state_value = getattr(new_class, state_name)
+        if state_value:
             if isinstance(state_value, Enum):
                 if not state_value in states_enum:
                     raise ValueError(
-                        'Initial state does not belong to states enum!')
+                        "Initial state does not belong to states enum!")
             else:
                 raise ValueError(
-                    'Initial value cannot be scalar, use Enum instance!')
+                    "Initial value cannot be scalar, use Enum instance!")
 
-        except AttributeError:
-            pass
+        if not get_config('allow_empty') and not state_value:
+            raise ValueError(
+                "Empty state is disallowed, yet no initial state is given!")
 
         setattr(new_class, new_state_name, state_value)
         setattr(new_class, state_name, utils.state_property)
@@ -78,6 +106,8 @@ class StateMachineMetaclass(type):
         setattr(new_class, '_meta', new_meta)
         setattr(new_class, 'is_', utils.is_)
         setattr(new_class, 'set_', utils.set_)
+
+        new_meta['config_getter'] = get_config
 
         return new_class
 
