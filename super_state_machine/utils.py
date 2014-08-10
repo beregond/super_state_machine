@@ -12,7 +12,17 @@ def is_(self, state):
 def set_(self, state):
     attr = self._meta['state_attribute_name']
     if not isinstance(state, Enum):
-        state = self._meta['reversed_states_map'][state]
+        try:
+            state = self._meta['reversed_states_map'][state]
+        except KeyError:
+            raise ValueError("Tried to assign wrong value ('{}').".format(
+                state))
+
+    states_enum = self._meta['states_enum']
+    if state not in states_enum:
+        raise ValueError(
+            "Given value ('{}') does not belongs to defined states enum."\
+            .format(state))
 
     actual_state = getattr(self, attr)
     complete = self._meta['complete']

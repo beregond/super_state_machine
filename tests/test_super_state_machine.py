@@ -324,3 +324,21 @@ class TestSuperStateMachine(unittest.TestCase):
         sm = Machine()
         self.assertEqual(sm.state, 'two')
         self.assertIs(sm.is_two, True)
+
+    def test_disallow_assignation_of_wrong_value(self):
+
+        class Machine(machine.StateMachine):
+
+            class States(Enum):
+
+                ONE = 'one'
+                TWO = 'two'
+                THREE = 'three'
+
+        sm = Machine()
+        sm.set_one()
+        self.assertIs(sm.is_one, True)
+        sm.set_(Machine.States.TWO)
+        self.assertIs(sm.is_two, True)
+        self.assertRaises(ValueError, sm.set_, StatesEnum.TWO)
+        self.assertRaises(ValueError, sm.set_, 'four')
