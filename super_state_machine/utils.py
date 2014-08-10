@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from .errors import TransitionError
+from .errors import TransitionError, AmbiguityError
 
 
 def is_(self, state):
@@ -73,3 +73,37 @@ def generate_setter(value):
     return setter
 
 state_property = property(state_getter, state_setter, state_deleter)
+
+
+class EnumValueTranslator(object):
+
+    def __init__(self, base_enum):
+        root = {}
+        for enum in base_enum:
+            tmp_root = root
+            for letter in enum.value:
+                tmp_root = tmp_root.setdefault(letter, {})
+                enum_container = tmp_root.setdefault('items', [])
+                enum_container.append(enum)
+
+        self.tree = root
+
+    def translate(self, value):
+        root = self.tree
+        for letter in value:
+            try:
+                root = root[letter]
+            except KeyError:
+                raise ValueError(
+                    "Wrong value given to translate ('{}')".format(value))
+
+        if len(root['items']) == 1:
+            return root['items'][0]
+
+        raise AmbiguityError(
+            "Can't decide which value is proper for value '{}', "
+            "available choices are: {}.".format(
+                value,
+                ", ".join(
+                    "'{} - {}'".format(e, e.value) for e in root['items']),
+            ))

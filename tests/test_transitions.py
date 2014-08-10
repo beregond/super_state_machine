@@ -53,3 +53,30 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
         sm.set_two()
         sm.set_one()
         self.assertIs(sm.is_one, True)
+
+    def test_reduced_transition_graph(self):
+
+        class Machine(machine.StateMachine):
+
+            States = StatesEnum
+
+            class Meta:
+
+                transitions = {
+                    'o': ['tw', 'th'],
+                    'tw': ['o', 'th'],
+                    'th': ['tw'],
+                }
+
+        sm = Machine()
+        self.assertIsNone(sm.state)
+        sm.set_one()
+        self.assertIs(sm.is_one, True)
+        sm.set_two()
+        sm.set_three()
+
+        self.assertRaises(errors.TransitionError, sm.set_one)
+        self.assertIs(sm.is_three, True)
+
+        self.assertRaises(errors.TransitionError, sm.set_, 'one')
+        self.assertIs(sm.is_three, True)

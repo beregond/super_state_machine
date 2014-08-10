@@ -107,7 +107,21 @@ class StateMachineMetaclass(type):
             setattr(new_class, name, method)
 
         allowed_transitions = get_config('transitions', {})
-        new_meta['transitions'] = allowed_transitions
+        new_trans = {}
+        translator = utils.EnumValueTranslator(states_enum)
+        for key, transitions in allowed_transitions.items():
+            if not isinstance(key, Enum):
+                key = translator.translate(key)
+
+            new_transitions = set()
+            for trans in transitions:
+                if not isinstance(trans, Enum):
+                    trans = translator.translate(trans)
+                new_transitions.add(trans)
+
+            new_trans[key] = new_transitions
+
+        new_meta['transitions'] = new_trans
 
         complete = get_config('complete', None)
         if complete is None:
