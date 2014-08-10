@@ -88,6 +88,9 @@ class StateMachineMetaclass(type):
         setattr(new_class, new_state_name, state_value)
         setattr(new_class, state_name, utils.state_property)
 
+        setattr(new_class, 'is_', utils.is_)
+        setattr(new_class, 'set_', utils.set_)
+
         new_methods = {}
         for s in states_enum:
             checker_name = 'is_{}'.format(s.value)
@@ -103,11 +106,17 @@ class StateMachineMetaclass(type):
 
             setattr(new_class, name, method)
 
-        setattr(new_class, '_meta', new_meta)
-        setattr(new_class, 'is_', utils.is_)
-        setattr(new_class, 'set_', utils.set_)
+        allowed_transitions = get_config('transitions', {})
+        new_meta['transitions'] = allowed_transitions
+
+        complete = get_config('complete', None)
+        if complete is None:
+            complete = not bool(allowed_transitions)
+
+        new_meta['complete'] = complete
 
         new_meta['config_getter'] = get_config
+        setattr(new_class, '_meta', new_meta)
 
         return new_class
 

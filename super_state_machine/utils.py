@@ -1,5 +1,9 @@
 """Utilities for core."""
 
+from enum import Enum
+
+from .errors import TransitionError
+
 
 def is_(self, state):
     return self.state == state
@@ -7,7 +11,18 @@ def is_(self, state):
 
 def set_(self, state):
     attr = self._meta['state_attribute_name']
-    state = self._meta['reversed_states_map'][state]
+    if not isinstance(state, Enum):
+        state = self._meta['reversed_states_map'][state]
+
+    actual_state = getattr(self, attr)
+    complete = self._meta['complete']
+    if not complete and actual_state is not None:
+        transitions = self._meta['transitions'][actual_state]
+        if state not in transitions:
+            raise TransitionError(
+                "Cannot transit from '{}' to '{}'.".format(
+                    actual_state.value, state.value))
+
     setattr(self, attr, state)
 
 
@@ -20,8 +35,7 @@ def state_getter(self):
 
 
 def state_setter(self, value):
-    attr = self._meta['state_attribute_name']
-    return setattr(self, attr, value)
+    self.set_(value)
 
 
 def state_deleter(self):
