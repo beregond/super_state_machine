@@ -56,13 +56,13 @@ def state_deleter(self):
     setattr(self, attr, None)
 
 
-def generate_checker(value):
+def generate_getter(value):
 
     @property
-    def checker(self):
+    def getter(self):
         return self.is_(value)
 
-    return checker
+    return getter
 
 
 def generate_setter(value):

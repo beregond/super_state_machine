@@ -93,8 +93,8 @@ class StateMachineMetaclass(type):
 
         new_methods = {}
         for s in states_enum:
-            checker_name = 'is_{}'.format(s.value)
-            new_methods[checker_name] = utils.generate_checker(s.value)
+            getter_name = 'is_{}'.format(s.value)
+            new_methods[getter_name] = utils.generate_getter(s.value)
 
             setter_name = 'set_{}'.format(s.value)
             new_methods[setter_name] = utils.generate_setter(s.value)
