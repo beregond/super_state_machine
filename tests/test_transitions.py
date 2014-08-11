@@ -80,3 +80,49 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
         self.assertRaises(errors.TransitionError, sm.set_, 'one')
         self.assertIs(sm.is_three, True)
+
+    def test_transitions_checkers(self):
+
+        class Machine(machine.StateMachine):
+
+            States = StatesEnum
+
+            class Meta:
+
+                transitions = {
+                    'o': ['tw', 'th'],
+                    'tw': ['o', 'th'],
+                    'th': ['tw', 'th'],
+                }
+
+        sm = Machine()
+        self.assertIs(sm.can_be_('one'), True)
+        self.assertIs(sm.can_be_('two'), True)
+        self.assertIs(sm.can_be_('three'), True)
+        self.assertIs(sm.can_be_('four'), True)
+        self.assertIs(sm.can_be_one, True)
+        self.assertIs(sm.can_be_two, True)
+        self.assertIs(sm.can_be_three, True)
+        self.assertIs(sm.can_be_four, True)
+
+        sm.set_one()
+        self.assertIs(sm.can_be_one, False)
+        self.assertIs(sm.can_be_two, True)
+        self.assertIs(sm.can_be_three, True)
+        self.assertIs(sm.can_be_four, False)
+
+        self.assertRaises(errors.TransitionError, sm.set_one)
+
+        sm.set_two()
+        self.assertIs(sm.can_be_one, True)
+        self.assertIs(sm.can_be_two, False)
+        self.assertIs(sm.can_be_three, True)
+        self.assertIs(sm.can_be_four, False)
+
+        sm.set_three()
+        self.assertIs(sm.can_be_one, False)
+        self.assertIs(sm.can_be_two, True)
+        self.assertIs(sm.can_be_three, True)
+        self.assertIs(sm.can_be_four, False)
+
+        sm.set_three()

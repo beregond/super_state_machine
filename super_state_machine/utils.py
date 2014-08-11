@@ -9,6 +9,19 @@ def is_(self, state):
     return self.state == state
 
 
+def can_be_(self, state):
+    attr = self._meta['state_attribute_name']
+    if not isinstance(state, Enum):
+        state = self._meta['reversed_states_map'][state]
+
+    actual_state = getattr(self, attr)
+    if actual_state is None:
+        return True
+
+    transitions = self._meta['transitions'][actual_state]
+    return state in transitions
+
+
 def set_(self, state):
     attr = self._meta['state_attribute_name']
     if not isinstance(state, Enum):
@@ -63,6 +76,15 @@ def generate_getter(value):
         return self.is_(value)
 
     return getter
+
+
+def generate_checker(value):
+
+    @property
+    def checker(self):
+        return self.can_be_(value)
+
+    return checker
 
 
 def generate_setter(value):

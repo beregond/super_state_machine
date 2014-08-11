@@ -89,6 +89,7 @@ class StateMachineMetaclass(type):
         setattr(new_class, state_name, utils.state_property)
 
         setattr(new_class, 'is_', utils.is_)
+        setattr(new_class, 'can_be_', utils.can_be_)
         setattr(new_class, 'set_', utils.set_)
 
         new_methods = {}
@@ -98,6 +99,9 @@ class StateMachineMetaclass(type):
 
             setter_name = 'set_{}'.format(s.value)
             new_methods[setter_name] = utils.generate_setter(s.value)
+
+            checker_name = 'can_be_{}'.format(s.value)
+            new_methods[checker_name] = utils.generate_checker(s.value)
 
         for name, method in new_methods.items():
             if hasattr(new_class, name):
