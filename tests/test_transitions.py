@@ -126,3 +126,149 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
         self.assertIs(sm.can_be_four, False)
 
         sm.set_three()
+
+    def test_transitions_checkers_with_complete_graph(self):
+
+        class Machine(machine.StateMachine):
+
+            States = StatesEnum
+
+            class Meta:
+
+                complete = True
+                transitions = {
+                    'o': ['tw', 'th'],
+                    'tw': ['o', 'th'],
+                    'th': ['tw', 'th'],
+                }
+
+        sm = Machine()
+        sm.set_three()
+        self.assertIs(sm.can_be_one, True)
+        self.assertIs(sm.can_be_two, True)
+        self.assertIs(sm.can_be_three, True)
+        self.assertIs(sm.can_be_four, True)
+        sm.set_four()
+        self.assertIs(sm.is_four, True)
+
+    def test_named_transitions_checkers(self):
+
+        class Machine(machine.StateMachine):
+
+            States = StatesEnum
+
+            class Meta:
+
+                transitions = {
+                    'o': ['tw', 'th'],
+                    'tw': ['o', 'th'],
+                    'th': ['tw', 'th'],
+                }
+                named_checkers = [
+                    ('can_go_to_one', 'one'),
+                    ('can_become_two', StatesEnum.TWO),
+                ]
+
+            @property
+            def can_one(self):
+                return self.can_be_('one')
+
+        sm = Machine()
+        sm.set_two()
+        self.assertIs(sm.can_be_one, True)
+        self.assertIs(sm.can_one, True)
+        self.assertIs(sm.can_go_to_one, True)
+        self.assertIs(sm.can_become_two, False)
+
+    def test_named_transitions_checkers_cant_overwrite_methods(self):
+        try:
+
+            class Machine(machine.StateMachine):
+
+                States = StatesEnum
+
+                class Meta:
+
+                    named_checkers = [
+                        ('can_one', 'one'),
+                    ]
+
+                @property
+                def can_one(self):
+                    return self.can_be_('one')
+
+        except ValueError:
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
+
+    def test_named_checkers_cant_overwrite_generated_methods(self):
+        try:
+
+            class Machine(machine.StateMachine):
+
+                States = StatesEnum
+
+                class Meta:
+
+                    named_checkers = [
+                        ('can_be_one', 'one'),
+                    ]
+
+                @property
+                def can_one(self):
+                    return self.can_be_('one')
+
+        except ValueError:
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
+
+    def test_named_checkers_dont_accept_wrong_values(self):
+        try:
+
+            class Machine(machine.StateMachine):
+
+                States = StatesEnum
+
+                class Meta:
+
+                    named_checkers = [
+                        ('can_become_five', 'five'),
+                    ]
+
+                @property
+                def can_one(self):
+                    return self.can_be_('one')
+
+        except ValueError:
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
+
+    def test_named_checkers_dont_accept_wrong_enums(self):
+
+        class OtherEnum(Enum):
+
+            ONE = 'one'
+
+        try:
+
+            class Machine(machine.StateMachine):
+
+                States = StatesEnum
+
+                class Meta:
+
+                    named_checkers = [
+                        ('can_be_other_one', OtherEnum.ONE),
+                    ]
+
+                @property
+                def can_one(self):
+                    return self.can_be_('one')
+
+        except ValueError:
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')

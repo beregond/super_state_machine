@@ -55,9 +55,9 @@ class TestSuperStateMachine(unittest.TestCase):
                 state = 'two'
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_state_machine_accepts_enums_only_from_proper_source(self):
 
@@ -78,9 +78,9 @@ class TestSuperStateMachine(unittest.TestCase):
                 state = OtherEnum.FOUR
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_state_machine_doesnt_allow_wrong_scalars(self):
         try:
@@ -96,9 +96,9 @@ class TestSuperStateMachine(unittest.TestCase):
                 state = 'four'
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_state_machine_accepts_only_unique_enums(self):
         try:
@@ -112,9 +112,9 @@ class TestSuperStateMachine(unittest.TestCase):
                     THREE = 'three'
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_state_machine_allows_to_change_and_check_state(self):
 
@@ -172,9 +172,9 @@ class TestSuperStateMachine(unittest.TestCase):
                     pass
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_name_collistion_for_setter_raises_exception(self):
         try:
@@ -191,9 +191,9 @@ class TestSuperStateMachine(unittest.TestCase):
                     pass
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_states_enum_can_be_predefined(self):
 
@@ -236,9 +236,9 @@ class TestSuperStateMachine(unittest.TestCase):
         try:
             del sm.state
         except RuntimeError:
-            return
-
-        raise RuntimeError('RuntimeError should be raised.')
+            pass
+        else:
+            raise RuntimeError('RuntimeError should be raised.')
 
     def test_states_enum_is_always_given(self):
         try:
@@ -248,9 +248,9 @@ class TestSuperStateMachine(unittest.TestCase):
                 pass
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_states_enum_is_always_enum(self):
         try:
@@ -260,9 +260,9 @@ class TestSuperStateMachine(unittest.TestCase):
                 States = 'something'
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_disallow_empty_without_initial_value(self):
         try:
@@ -276,9 +276,9 @@ class TestSuperStateMachine(unittest.TestCase):
                     allow_empty = False
 
         except ValueError:
-            return
-
-        raise RuntimeError('ValueError should be raised.')
+            pass
+        else:
+            raise RuntimeError('ValueError should be raised.')
 
     def test_initial_value(self):
 

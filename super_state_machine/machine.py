@@ -103,16 +103,29 @@ class StateMachineMetaclass(type):
             checker_name = 'can_be_{}'.format(s.value)
             new_methods[checker_name] = utils.generate_checker(s.value)
 
+        translator = utils.EnumValueTranslator(states_enum)
+
+        named_checkers = get_config('named_checkers', None) or []
+        for method, key in named_checkers:
+            key = translator.translate(key)
+
+            if method in new_methods:
+                raise ValueError(
+                    "Name collision for named checker '{}' - this name is "
+                    "reserved for other auto generated method.".format(method))
+
+            new_methods[method] = utils.generate_checker(key.value)
+
         for name, method in new_methods.items():
             if hasattr(new_class, name):
                 raise ValueError(
-                    "Name collision in generated class - '{}'.".format(name))
+                    "Name collision in state machine class - '{}'."
+                    .format(name))
 
             setattr(new_class, name, method)
 
         allowed_transitions = get_config('transitions', {})
         new_trans = {}
-        translator = utils.EnumValueTranslator(states_enum)
         for key, transitions in allowed_transitions.items():
             if not isinstance(key, Enum):
                 key = translator.translate(key)

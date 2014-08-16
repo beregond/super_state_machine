@@ -10,6 +10,9 @@ def is_(self, state):
 
 
 def can_be_(self, state):
+    if self._meta['complete']:
+        return True
+
     attr = self._meta['state_attribute_name']
     if not isinstance(state, Enum):
         state = self._meta['reversed_states_map'][state]
@@ -100,6 +103,8 @@ state_property = property(state_getter, state_setter, state_deleter)
 class EnumValueTranslator(object):
 
     def __init__(self, base_enum):
+        self.base_enum = base_enum
+
         root = {}
         for enum in base_enum:
             tmp_root = root
@@ -111,6 +116,14 @@ class EnumValueTranslator(object):
         self.tree = root
 
     def translate(self, value):
+        if isinstance(value, Enum):
+            if value not in self.base_enum:
+                raise ValueError(
+                    "Given value ('{}') doesn't belongs to given enum."
+                    .format(value))
+
+            return value
+
         root = self.tree
         for letter in value:
             try:
