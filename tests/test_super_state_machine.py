@@ -57,7 +57,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_state_machine_accepts_enums_only_from_proper_source(self):
 
@@ -80,7 +80,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_state_machine_doesnt_allow_wrong_scalars(self):
         try:
@@ -98,7 +98,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_state_machine_accepts_only_unique_enums(self):
         try:
@@ -114,7 +114,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_state_machine_allows_to_change_and_check_state(self):
 
@@ -174,7 +174,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_name_collistion_for_setter_raises_exception(self):
         try:
@@ -193,7 +193,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_states_enum_can_be_predefined(self):
 
@@ -238,7 +238,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except RuntimeError:
             pass
         else:
-            raise RuntimeError('RuntimeError should be raised.')
+            raise AssertionError('RuntimeError should be raised.')
 
     def test_states_enum_is_always_given(self):
         try:
@@ -250,7 +250,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_states_enum_is_always_enum(self):
         try:
@@ -262,7 +262,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_disallow_empty_without_initial_value(self):
         try:
@@ -278,7 +278,7 @@ class TestSuperStateMachine(unittest.TestCase):
         except ValueError:
             pass
         else:
-            raise RuntimeError('ValueError should be raised.')
+            raise AssertionError('ValueError should be raised.')
 
     def test_initial_value(self):
 

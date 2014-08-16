@@ -12,6 +12,11 @@ class StatesEnum(Enum):
     FOUR = 'four'
 
 
+class OtherEnum(Enum):
+
+    ONE = 'one'
+
+
 class TestSuperStateMachineEnumValueTranslator(unittest.TestCase):
 
     def test_translator(self):
@@ -38,3 +43,9 @@ class TestSuperStateMachineEnumValueTranslator(unittest.TestCase):
     def test_translator_for_ambiguity(self):
         trans = utils.EnumValueTranslator(StatesEnum)
         self.assertRaises(errors.AmbiguityError, trans.translate, 't')
+
+    def test_translator_for_enum_value(self):
+        trans = utils.EnumValueTranslator(StatesEnum)
+        self.assertIs(trans.translate(StatesEnum.ONE), StatesEnum.ONE)
+        self.assertIs(trans.translate(StatesEnum.TWO), StatesEnum.TWO)
+        self.assertRaises(ValueError, trans.translate, OtherEnum.ONE)

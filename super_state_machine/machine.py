@@ -92,6 +92,25 @@ class StateMachineMetaclass(type):
         setattr(new_class, 'can_be_', utils.can_be_)
         setattr(new_class, 'set_', utils.set_)
 
+        translator = utils.EnumValueTranslator(states_enum)
+
+        allowed_transitions = get_config('transitions', {})
+        new_trans = {}
+        for key, transitions in allowed_transitions.items():
+            key = translator.translate(key)
+
+            new_transitions = set()
+            for trans in transitions:
+                if not isinstance(trans, Enum):
+                    trans = translator.translate(trans)
+                new_transitions.add(trans)
+
+            new_trans[key] = new_transitions
+
+        for s in states_enum:
+            if s not in new_trans:
+                new_trans[s] = set()
+
         new_methods = {}
         for s in states_enum:
             getter_name = 'is_{}'.format(s.value)
@@ -103,18 +122,41 @@ class StateMachineMetaclass(type):
             checker_name = 'can_be_{}'.format(s.value)
             new_methods[checker_name] = utils.generate_checker(s.value)
 
-        translator = utils.EnumValueTranslator(states_enum)
-
         named_checkers = get_config('named_checkers', None) or []
         for method, key in named_checkers:
-            key = translator.translate(key)
-
             if method in new_methods:
                 raise ValueError(
                     "Name collision for named checker '{}' - this name is "
                     "reserved for other auto generated method.".format(method))
 
+            key = translator.translate(key)
             new_methods[method] = utils.generate_checker(key.value)
+
+        named_transitions = get_config('named_transitions', None) or []
+        for item in named_transitions:
+            try:
+                method, key = item
+                from_values = states_enum
+            except ValueError:
+                method, key, from_values = item
+                if from_values is None:
+                    from_values = []
+                if not isinstance(from_values, list):
+                    from_values = list((from_values,))
+
+            if method in new_methods:
+                raise ValueError(
+                    "Name collision for transition '{}' - this name is "
+                    "reserved for other auto generated method.".format(method))
+
+            key = translator.translate(key)
+            new_methods[method] = utils.generate_setter(key)
+
+            if from_values:
+                from_values = [translator.translate(k) for k in from_values]
+                for s in states_enum:
+                    if s in from_values:
+                        new_trans[s].add(key)
 
         for name, method in new_methods.items():
             if hasattr(new_class, name):
@@ -124,25 +166,11 @@ class StateMachineMetaclass(type):
 
             setattr(new_class, name, method)
 
-        allowed_transitions = get_config('transitions', {})
-        new_trans = {}
-        for key, transitions in allowed_transitions.items():
-            if not isinstance(key, Enum):
-                key = translator.translate(key)
-
-            new_transitions = set()
-            for trans in transitions:
-                if not isinstance(trans, Enum):
-                    trans = translator.translate(trans)
-                new_transitions.add(trans)
-
-            new_trans[key] = new_transitions
-
         new_meta['transitions'] = new_trans
 
         complete = get_config('complete', None)
         if complete is None:
-            complete = not bool(allowed_transitions)
+            complete = not (allowed_transitions or named_transitions)
 
         new_meta['complete'] = complete
 
