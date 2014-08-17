@@ -6,11 +6,9 @@ from .errors import TransitionError, AmbiguityError
 
 
 def is_(self, state):
-    attr = self._meta['state_attribute_name']
-    actual_state = getattr(self, attr)
     translator = self._meta['translator']
     state = translator.translate(state)
-    return actual_state == state
+    return self.actual_state == state
 
 
 def can_be_(self, state):
@@ -20,33 +18,29 @@ def can_be_(self, state):
     if self._meta['complete']:
         return True
 
-    attr = self._meta['state_attribute_name']
-    actual_state = getattr(self, attr)
-    if actual_state is None:
+    if self.actual_state is None:
         return True
 
-    transitions = self._meta['transitions'][actual_state]
+    transitions = self._meta['transitions'][self.actual_state]
     return state in transitions
 
 
 def set_(self, state):
-    attr = self._meta['state_attribute_name']
     translator = self._meta['translator']
     state = translator.translate(state)
 
-    actual_state = getattr(self, attr)
     if not self.can_be_(state):
         raise TransitionError(
             "Cannot transit from '{}' to '{}'.".format(
-                actual_state.value, state.value))
+                self.actual_state.value, state.value))
 
+    attr = self._meta['state_attribute_name']
     setattr(self, attr, state)
 
 
 def state_getter(self):
-    attr = self._meta['state_attribute_name']
     try:
-        return getattr(self, attr).value
+        return self.actual_state.value
     except AttributeError:
         return None
 
@@ -89,6 +83,12 @@ def generate_setter(value):
     return setter
 
 state_property = property(state_getter, state_setter, state_deleter)
+
+
+@property
+def actual_state(self):
+    attr = self._meta['state_attribute_name']
+    return getattr(self, attr)
 
 
 class EnumValueTranslator(object):

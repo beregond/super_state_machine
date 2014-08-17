@@ -58,27 +58,20 @@ class StateMachineMetaclass(type):
                 'Please provide enum instance for available states.')
 
         states_enum = unique(states_enum)
-
         new_meta['states_enum'] = states_enum
+
+        translator = utils.EnumValueTranslator(states_enum)
+        new_meta['translator'] = translator
 
         state_name = 'state'
         new_state_name = '_' + state_name
         new_meta['state_attribute_name'] = new_state_name
+
         state_value = get_config('initial_state', None)
-        if not state_value:
-            try:
-                state_value = getattr(new_class, state_name)
-            except AttributeError:
-                pass
+        state_value = state_value or getattr(new_class, state_name, None)
 
         if state_value:
-            if isinstance(state_value, Enum):
-                if not state_value in states_enum:
-                    raise ValueError(
-                        "Initial state does not belong to states enum!")
-            else:
-                raise ValueError(
-                    "Initial value cannot be scalar, use Enum instance!")
+            state_value = translator.translate(state_value)
 
         if not get_config('allow_empty') and not state_value:
             raise ValueError(
@@ -90,9 +83,6 @@ class StateMachineMetaclass(type):
         setattr(new_class, 'is_', utils.is_)
         setattr(new_class, 'can_be_', utils.can_be_)
         setattr(new_class, 'set_', utils.set_)
-
-        translator = utils.EnumValueTranslator(states_enum)
-        new_meta['translator'] = translator
 
         allowed_transitions = get_config('transitions', {})
         new_trans = {}
@@ -107,20 +97,22 @@ class StateMachineMetaclass(type):
 
             new_trans[key] = new_transitions
 
-        for s in states_enum:
-            if s not in new_trans:
-                new_trans[s] = set()
+        for state in states_enum:
+            if state not in new_trans:
+                new_trans[state] = set()
 
         new_methods = {}
-        for s in states_enum:
-            getter_name = 'is_{}'.format(s.value)
-            new_methods[getter_name] = utils.generate_getter(s.value)
+        for state in states_enum:
+            getter_name = 'is_{}'.format(state.value)
+            new_methods[getter_name] = utils.generate_getter(state)
 
-            setter_name = 'set_{}'.format(s.value)
-            new_methods[setter_name] = utils.generate_setter(s.value)
+            setter_name = 'set_{}'.format(state.value)
+            new_methods[setter_name] = utils.generate_setter(state)
 
-            checker_name = 'can_be_{}'.format(s.value)
-            new_methods[checker_name] = utils.generate_checker(s.value)
+            checker_name = 'can_be_{}'.format(state.value)
+            new_methods[checker_name] = utils.generate_checker(state)
+
+        new_methods['actual_state'] = utils.actual_state
 
         named_checkers = get_config('named_checkers', None) or []
         for method, key in named_checkers:

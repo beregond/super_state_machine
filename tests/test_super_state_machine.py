@@ -1,7 +1,7 @@
 import unittest
 from enum import Enum
 
-from super_state_machine import machine
+from super_state_machine import machine, errors
 
 
 class StatesEnum(Enum):
@@ -45,7 +45,22 @@ class TestSuperStateMachine(unittest.TestCase):
         sm = Machine()
         self.assertEqual(sm.state, 'one')
 
-    def test_state_machine_doesnt_allow_scalars_on_init(self):
+    def test_state_machine_allow_scalars_on_init(self):
+
+        class Machine(machine.StateMachine):
+
+            class States(Enum):
+
+                ONE = 'one'
+                TWO = 'two'
+                THREE = 'three'
+
+            state = 'tw'
+
+        sm = Machine()
+        self.assertIs(sm.is_two, True)
+
+    def test_state_machine_init_value_ambiguity(self):
         try:
 
             class Machine(machine.StateMachine):
@@ -56,9 +71,9 @@ class TestSuperStateMachine(unittest.TestCase):
                     TWO = 'two'
                     THREE = 'three'
 
-                state = 'two'
+                state = 't'
 
-        except ValueError:
+        except errors.AmbiguityError:
             pass
         else:
             raise AssertionError('ValueError should be raised.')
@@ -365,3 +380,49 @@ class TestSuperStateMachine(unittest.TestCase):
         self.assertRaises(ValueError, sm.can_be_, OtherEnum.ONE)
         self.assertRaises(ValueError, sm.set_, 'five')
         self.assertRaises(ValueError, sm.set_, OtherEnum.ONE)
+
+    def test_get_actual_state_as_enum(self):
+
+        class Machine(machine.StateMachine):
+
+            States = StatesEnum
+
+        sm = Machine()
+        self.assertIsNone(sm.actual_state)
+        sm.set_one()
+        self.assertIs(sm.actual_state, StatesEnum.ONE)
+        sm.set_two()
+        self.assertIs(sm.actual_state, StatesEnum.TWO)
+        del sm.state
+        self.assertIsNone(sm.actual_state)
+
+    def test_actual_state_name_collision(self):
+        try:
+            class Machine(machine.StateMachine):
+
+                States = StatesEnum
+
+                def actual_state(self):
+                    pass
+
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('ValueError should be raised.')
+
+    def test_actual_state_name_collision_with_generated_methods(self):
+        try:
+            class Machine(machine.StateMachine):
+
+                States = StatesEnum
+
+                class Meta:
+
+                    named_transitions = [
+                        ('actual_state', 'one'),
+                    ]
+
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('ValueError should be raised.')
