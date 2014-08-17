@@ -6,17 +6,21 @@ from .errors import TransitionError, AmbiguityError
 
 
 def is_(self, state):
-    return self.state == state
+    attr = self._meta['state_attribute_name']
+    actual_state = getattr(self, attr)
+    translator = self._meta['translator']
+    state = translator.translate(state)
+    return actual_state == state
 
 
 def can_be_(self, state):
+    translator = self._meta['translator']
+    state = translator.translate(state)
+
     if self._meta['complete']:
         return True
 
     attr = self._meta['state_attribute_name']
-    if not isinstance(state, Enum):
-        state = self._meta['reversed_states_map'][state]
-
     actual_state = getattr(self, attr)
     if actual_state is None:
         return True
@@ -27,27 +31,14 @@ def can_be_(self, state):
 
 def set_(self, state):
     attr = self._meta['state_attribute_name']
-    if not isinstance(state, Enum):
-        try:
-            state = self._meta['reversed_states_map'][state]
-        except KeyError:
-            raise ValueError("Tried to assign wrong value ('{}').".format(
-                state))
-
-    states_enum = self._meta['states_enum']
-    if state not in states_enum:
-        raise ValueError(
-            "Given value ('{}') does not belongs to defined states enum."\
-            .format(state))
+    translator = self._meta['translator']
+    state = translator.translate(state)
 
     actual_state = getattr(self, attr)
-    complete = self._meta['complete']
-    if not complete and actual_state is not None:
-        transitions = self._meta['transitions'][actual_state]
-        if state not in transitions:
-            raise TransitionError(
-                "Cannot transit from '{}' to '{}'.".format(
-                    actual_state.value, state.value))
+    if not self.can_be_(state):
+        raise TransitionError(
+            "Cannot transit from '{}' to '{}'.".format(
+                actual_state.value, state.value))
 
     setattr(self, attr, state)
 

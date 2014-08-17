@@ -10,6 +10,10 @@ class StatesEnum(Enum):
     TWO = 'two'
     THREE = 'three'
 
+class OtherEnum(Enum):
+
+    ONE = 'one'
+
 
 class TestSuperStateMachine(unittest.TestCase):
 
@@ -342,3 +346,22 @@ class TestSuperStateMachine(unittest.TestCase):
         self.assertIs(sm.is_two, True)
         self.assertRaises(ValueError, sm.set_, StatesEnum.TWO)
         self.assertRaises(ValueError, sm.set_, 'four')
+
+    def test_checker_getter_and_setter_wrong_values_and_enums(self):
+
+        class Machine(machine.StateMachine):
+
+            States = StatesEnum
+
+        sm = Machine()
+
+        sm.is_('one')
+        sm.can_be_('one')
+        sm.set_('one')
+
+        self.assertRaises(ValueError, sm.is_, 'five')
+        self.assertRaises(ValueError, sm.is_, OtherEnum.ONE)
+        self.assertRaises(ValueError, sm.can_be_, 'five')
+        self.assertRaises(ValueError, sm.can_be_, OtherEnum.ONE)
+        self.assertRaises(ValueError, sm.set_, 'five')
+        self.assertRaises(ValueError, sm.set_, OtherEnum.ONE)

@@ -60,7 +60,6 @@ class StateMachineMetaclass(type):
         states_enum = unique(states_enum)
 
         new_meta['states_enum'] = states_enum
-        new_meta['reversed_states_map'] = {s.value: s for s in states_enum}
 
         state_name = 'state'
         new_state_name = '_' + state_name
@@ -93,6 +92,7 @@ class StateMachineMetaclass(type):
         setattr(new_class, 'set_', utils.set_)
 
         translator = utils.EnumValueTranslator(states_enum)
+        new_meta['translator'] = translator
 
         allowed_transitions = get_config('transitions', {})
         new_trans = {}
