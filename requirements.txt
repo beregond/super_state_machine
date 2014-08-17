@@ -1,3 +1,4 @@
 enum34==1.0
 pyhistory==1.2.1
 wheel==0.23.0
+tox==1.7.2
