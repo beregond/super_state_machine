@@ -29,152 +29,246 @@ class DefaultMeta(object):
     allow_empty = True
 
 
+class _AttributeDict(dict):
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+    def __getattr__(self, key):
+        return self[key]
+
+
 class StateMachineMetaclass(type):
 
     """Metaclass for state machine, to build all its logic."""
 
     def __new__(cls, name, bases, attrs):
         """Create state machine and add all logic and methods to it."""
-        cls.new_class = super(cls, cls).__new__(cls, name, bases, attrs)
+        cls._set_up_context()
+        new_class = super(cls, cls).__new__(cls, name, bases, attrs)
+        cls.context.new_class = new_class
 
         parents = [b for b in bases if isinstance(b, cls)]
         if not parents:
-            return cls.new_class
+            return cls.context.new_class
 
-        meta = getattr(cls.new_class, 'Meta', DefaultMeta)
-        get_config = partial(_get_config, meta)
-        new_meta = {}
+        cls._set_up_config_getter()
+        cls._check_states_enum()
+        cls._set_up_translator()
+        cls._calculate_state_name()
+        cls._check_state_value()
+        cls._add_standard_attributes()
+        cls._generate_standard_transitions()
+        cls._generate_standard_methods()
+        cls._generate_named_checkers()
+        cls._generate_named_transitions()
+        cls._add_new_methods()
+        cls._set_complete_option()
+        cls._complete_meta_for_new_class()
 
-        states_enum_name = get_config('states_enum_name')
+        new_class = cls.context.new_class
+        del cls.context
+        return new_class
 
+    @classmethod
+    def _set_up_context(cls):
+        """Create context to keep all needed variables in."""
+        cls.context = _AttributeDict()
+        cls.context.new_meta = {}
+        cls.context.new_transitions = {}
+        cls.context.new_methods = {}
+
+    @classmethod
+    def _check_states_enum(cls):
+        """Check if states enum exists and is proper one."""
+        states_enum_name = cls.context.get_config('states_enum_name')
         try:
-            states_enum = getattr(cls.new_class, states_enum_name)
+            cls.context['states_enum'] = getattr(
+                cls.context.new_class, states_enum_name)
         except AttributeError:
             raise ValueError('No states enum given!')
 
         proper = True
         try:
-            if not issubclass(states_enum, Enum):
+            if not issubclass(cls.context.states_enum, Enum):
                 proper = False
         except TypeError:
             proper = False
 
         if not proper:
             raise ValueError(
-                'Please provide enum instance for available states.')
+                'Please provide enum instance to define available states.')
 
-        translator = utils.EnumValueTranslator(states_enum)
-        new_meta['translator'] = translator
-
-        state_name = 'state'
-        new_state_name = '_' + state_name
-        new_meta['state_attribute_name'] = new_state_name
-
-        state_value = get_config('initial_state', None)
-        state_value = state_value or getattr(cls.new_class, state_name, None)
+    @classmethod
+    def _check_state_value(cls):
+        """Check initial state value - if is proper and translate it."""
+        state_value = cls.context.get_config('initial_state', None)
+        state_value = state_value or getattr(
+            cls.context.new_class, cls.context.state_name, None)
 
         if state_value:
-            state_value = translator.translate(state_value)
+            state_value = (
+                cls.context
+                .new_meta['translator']
+                .translate(state_value)
+            )
 
-        if not get_config('allow_empty') and not state_value:
+        if not cls.context.get_config('allow_empty') and not state_value:
             raise ValueError(
                 "Empty state is disallowed, yet no initial state is given!")
 
-        setattr(cls.new_class, new_state_name, state_value)
-        setattr(cls.new_class, state_name, utils.state_property)
+        cls.context.state_value = state_value
 
-        setattr(cls.new_class, 'is_', utils.is_)
-        setattr(cls.new_class, 'can_be_', utils.can_be_)
-        setattr(cls.new_class, 'set_', utils.set_)
+    @classmethod
+    def _add_standard_attributes(cls):
+        """Add attributes common to all state machines.
 
-        allowed_transitions = get_config('transitions', {})
-        new_trans = {}
+        These are methods for setting and checking state etc.
+
+        """
+        setattr(
+            cls.context.new_class,
+            cls.context.new_meta['state_attribute_name'],
+            cls.context.state_value)
+        setattr(
+            cls.context.new_class,
+            cls.context.state_name,
+            utils.state_property)
+
+        setattr(cls.context.new_class, 'is_', utils.is_)
+        setattr(cls.context.new_class, 'can_be_', utils.can_be_)
+        setattr(cls.context.new_class, 'set_', utils.set_)
+
+    @classmethod
+    def _generate_standard_transitions(cls):
+        """Generate methods used for transitions."""
+        allowed_transitions = cls.context.get_config('transitions', {})
         for key, transitions in allowed_transitions.items():
-            key = translator.translate(key)
+            key = cls.context.new_meta['translator'].translate(key)
 
             new_transitions = set()
             for trans in transitions:
                 if not isinstance(trans, Enum):
-                    trans = translator.translate(trans)
+                    trans = cls.context.new_meta['translator'].translate(trans)
                 new_transitions.add(trans)
 
-            new_trans[key] = new_transitions
+            cls.context.new_transitions[key] = new_transitions
 
-        for state in states_enum:
-            if state not in new_trans:
-                new_trans[state] = set()
+        for state in cls.context.states_enum:
+            if state not in cls.context.new_transitions:
+                cls.context.new_transitions[state] = set()
 
-        new_methods = {}
-        for state in states_enum:
+    @classmethod
+    def _generate_standard_methods(cls):
+        """Generate standard setters, getters and checkers."""
+        for state in cls.context.states_enum:
             getter_name = 'is_{}'.format(state.value)
-            new_methods[getter_name] = utils.generate_getter(state)
+            cls.context.new_methods[getter_name] = utils.generate_getter(state)
 
             setter_name = 'set_{}'.format(state.value)
-            new_methods[setter_name] = utils.generate_setter(state)
+            cls.context.new_methods[setter_name] = utils.generate_setter(state)
 
             checker_name = 'can_be_{}'.format(state.value)
-            new_methods[checker_name] = utils.generate_checker(state)
+            checker = utils.generate_checker(state)
+            cls.context.new_methods[checker_name] = checker
 
-        new_methods['actual_state'] = utils.actual_state
+        cls.context.new_methods['actual_state'] = utils.actual_state
 
-        named_checkers = get_config('named_checkers', None) or []
+    @classmethod
+    def _generate_named_checkers(cls):
+        named_checkers = cls.context.get_config('named_checkers', None) or []
         for method, key in named_checkers:
-            if method in new_methods:
+            if method in cls.context.new_methods:
                 raise ValueError(
                     "Name collision for named checker '{}' - this name is "
                     "reserved for other auto generated method.".format(method))
 
-            key = translator.translate(key)
-            new_methods[method] = utils.generate_checker(key.value)
+            key = cls.context.new_meta['translator'].translate(key)
+            cls.context.new_methods[method] = utils.generate_checker(key.value)
 
-        named_transitions = get_config('named_transitions', None) or []
+    @classmethod
+    def _generate_named_transitions(cls):
+        named_transitions = (
+            cls.context.get_config('named_transitions', None) or [])
+
+        translator = cls.context.new_meta['translator']
         for item in named_transitions:
-            try:
-                method, key = item
-                from_values = states_enum
-            except ValueError:
-                method, key, from_values = item
-                if from_values is None:
-                    from_values = []
-                if not isinstance(from_values, list):
-                    from_values = list((from_values,))
+            method, key, from_values = cls._unpack_named_transition_tuple(item)
 
-            if method in new_methods:
+            if method in cls.context.new_methods:
                 raise ValueError(
                     "Name collision for transition '{}' - this name is "
                     "reserved for other auto generated method.".format(method))
 
             key = translator.translate(key)
-            new_methods[method] = utils.generate_setter(key)
+            cls.context.new_methods[method] = utils.generate_setter(key)
 
             if from_values:
                 from_values = [translator.translate(k) for k in from_values]
-                for s in states_enum:
+                for s in cls.context.states_enum:
                     if s in from_values:
-                        new_trans[s].add(key)
+                        cls.context.new_transitions[s].add(key)
 
-        for name, method in new_methods.items():
-            if hasattr(cls.new_class, name):
+    @classmethod
+    def _unpack_named_transition_tuple(cls, item):
+        try:
+            method, key = item
+            from_values = cls.context['states_enum']
+        except ValueError:
+            method, key, from_values = item
+            if from_values is None:
+                from_values = []
+            if not isinstance(from_values, list):
+                from_values = list((from_values,))
+
+        return method, key, from_values
+
+    @classmethod
+    def _add_new_methods(cls):
+        """Add all generated methods to result class."""
+        for name, method in cls.context.new_methods.items():
+            if hasattr(cls.context.new_class, name):
                 raise ValueError(
                     "Name collision in state machine class - '{}'."
                     .format(name))
 
-            setattr(cls.new_class, name, method)
+            setattr(cls.context.new_class, name, method)
 
-        new_meta['transitions'] = new_trans
-
+    @classmethod
+    def _set_complete_option(cls):
+        """Check and set complete option."""
+        get_config = cls.context.get_config
         complete = get_config('complete', None)
         if complete is None:
-            complete = not (allowed_transitions or named_transitions)
+            conditions = [
+                get_config('transitions', False),
+                get_config('named_transitions', False),
+            ]
+            complete = not any(conditions)
 
-        new_meta['complete'] = complete
+        cls.context.new_meta['complete'] = complete
 
-        new_meta['config_getter'] = get_config
-        setattr(cls.new_class, '_meta', new_meta)
+    @classmethod
+    def _set_up_config_getter(cls):
+        meta = getattr(cls.context.new_class, 'Meta', DefaultMeta)
+        cls.context.get_config = partial(_get_config, meta)
 
-        new_class = cls.new_class
-        del cls.new_class
-        return new_class
+    @classmethod
+    def _set_up_translator(cls):
+        translator = utils.EnumValueTranslator(cls.context['states_enum'])
+        cls.context.new_meta['translator'] = translator
+
+    @classmethod
+    def _calculate_state_name(cls):
+        cls.context.state_name = 'state'
+        new_state_name = '_' + cls.context.state_name
+        cls.context.new_meta['state_attribute_name'] = new_state_name
+
+    @classmethod
+    def _complete_meta_for_new_class(cls):
+        cls.context.new_meta['transitions'] = cls.context.new_transitions
+        cls.context.new_meta['config_getter'] = cls.context['get_config']
+        setattr(cls.context.new_class, '_meta', cls.context['new_meta'])
 
 
 class StateMachine(six.with_metaclass(StateMachineMetaclass)):
