@@ -10,6 +10,7 @@ class StatesEnum(Enum):
     TWO = 'two'
     THREE = 'three'
 
+
 class OtherEnum(Enum):
 
     ONE = 'one'
@@ -154,7 +155,6 @@ class TestSuperStateMachine(unittest.TestCase):
         self.assertIs(sm.is_('two'), False)
         sm.set_('two')
         self.assertIs(sm.is_('two'), True)
-
 
     def test_state_machine_allows_to_change_and_check_state_by_methods(self):
 

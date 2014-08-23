@@ -7,6 +7,7 @@ import six
 
 from . import utils
 
+
 def _get_config(meta, attr, default=[]):
     for m in [meta, DefaultMeta]:
         try:
@@ -22,14 +23,19 @@ def _get_config(meta, attr, default=[]):
 
 class DefaultMeta(object):
 
+    """Default configuration values."""
+
     states_enum_name = 'States'
     allow_empty = True
 
 
 class StateMachineMetaclass(type):
 
+    """Metaclass for state machine, to build all its logic."""
+
     def __new__(cls, name, bases, attrs):
-        new_class =  super(cls, cls).__new__(cls, name, bases, attrs)
+        """Create state machine and add all logic and methods to it."""
+        new_class = super(cls, cls).__new__(cls, name, bases, attrs)
 
         parents = [b for b in bases if isinstance(b, cls)]
         if not parents:
@@ -174,4 +180,4 @@ class StateMachineMetaclass(type):
 
 class StateMachine(six.with_metaclass(StateMachineMetaclass)):
 
-    pass
+    """State machine."""

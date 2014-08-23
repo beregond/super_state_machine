@@ -1,12 +1,21 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf8
 
+import sys
 
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
+# Hacking unittest.
+try:
+    import tests
+    if 'test' in sys.argv and '--quick' in sys.argv:
+        tests.QUICK_TESTS = True
+        del sys.argv[sys.argv.index('--quick')]
+except ImportError:
+    pass
 
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')

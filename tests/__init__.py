@@ -1,1 +1,3 @@
-# -*- coding: utf-8 -*-
+"""Tests."""
+
+QUICK_TESTS = False
