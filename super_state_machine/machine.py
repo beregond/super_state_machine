@@ -1,6 +1,6 @@
 """State machine core."""
 
-from enum import Enum, unique
+from enum import Enum
 from functools import partial
 
 import six
@@ -35,20 +35,20 @@ class StateMachineMetaclass(type):
 
     def __new__(cls, name, bases, attrs):
         """Create state machine and add all logic and methods to it."""
-        new_class = super(cls, cls).__new__(cls, name, bases, attrs)
+        cls.new_class = super(cls, cls).__new__(cls, name, bases, attrs)
 
         parents = [b for b in bases if isinstance(b, cls)]
         if not parents:
-            return new_class
+            return cls.new_class
 
-        meta = getattr(new_class, 'Meta', DefaultMeta)
+        meta = getattr(cls.new_class, 'Meta', DefaultMeta)
         get_config = partial(_get_config, meta)
         new_meta = {}
 
         states_enum_name = get_config('states_enum_name')
 
         try:
-            states_enum = getattr(new_class, states_enum_name)
+            states_enum = getattr(cls.new_class, states_enum_name)
         except AttributeError:
             raise ValueError('No states enum given!')
 
@@ -63,9 +63,6 @@ class StateMachineMetaclass(type):
             raise ValueError(
                 'Please provide enum instance for available states.')
 
-        states_enum = unique(states_enum)
-        new_meta['states_enum'] = states_enum
-
         translator = utils.EnumValueTranslator(states_enum)
         new_meta['translator'] = translator
 
@@ -74,7 +71,7 @@ class StateMachineMetaclass(type):
         new_meta['state_attribute_name'] = new_state_name
 
         state_value = get_config('initial_state', None)
-        state_value = state_value or getattr(new_class, state_name, None)
+        state_value = state_value or getattr(cls.new_class, state_name, None)
 
         if state_value:
             state_value = translator.translate(state_value)
@@ -83,12 +80,12 @@ class StateMachineMetaclass(type):
             raise ValueError(
                 "Empty state is disallowed, yet no initial state is given!")
 
-        setattr(new_class, new_state_name, state_value)
-        setattr(new_class, state_name, utils.state_property)
+        setattr(cls.new_class, new_state_name, state_value)
+        setattr(cls.new_class, state_name, utils.state_property)
 
-        setattr(new_class, 'is_', utils.is_)
-        setattr(new_class, 'can_be_', utils.can_be_)
-        setattr(new_class, 'set_', utils.set_)
+        setattr(cls.new_class, 'is_', utils.is_)
+        setattr(cls.new_class, 'can_be_', utils.can_be_)
+        setattr(cls.new_class, 'set_', utils.set_)
 
         allowed_transitions = get_config('transitions', {})
         new_trans = {}
@@ -157,12 +154,12 @@ class StateMachineMetaclass(type):
                         new_trans[s].add(key)
 
         for name, method in new_methods.items():
-            if hasattr(new_class, name):
+            if hasattr(cls.new_class, name):
                 raise ValueError(
                     "Name collision in state machine class - '{}'."
                     .format(name))
 
-            setattr(new_class, name, method)
+            setattr(cls.new_class, name, method)
 
         new_meta['transitions'] = new_trans
 
@@ -173,8 +170,10 @@ class StateMachineMetaclass(type):
         new_meta['complete'] = complete
 
         new_meta['config_getter'] = get_config
-        setattr(new_class, '_meta', new_meta)
+        setattr(cls.new_class, '_meta', new_meta)
 
+        new_class = cls.new_class
+        del cls.new_class
         return new_class
 
 

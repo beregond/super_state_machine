@@ -17,6 +17,13 @@ class OtherEnum(Enum):
     ONE = 'one'
 
 
+class NonUniqueEnum(Enum):
+
+    ONE = 'one'
+    TWO = 'two'
+    THREE = 'one'
+
+
 class TestSuperStateMachineEnumValueTranslator(unittest.TestCase):
 
     def test_translator(self):
@@ -49,3 +56,6 @@ class TestSuperStateMachineEnumValueTranslator(unittest.TestCase):
         self.assertIs(trans.translate(StatesEnum.ONE), StatesEnum.ONE)
         self.assertIs(trans.translate(StatesEnum.TWO), StatesEnum.TWO)
         self.assertRaises(ValueError, trans.translate, OtherEnum.ONE)
+
+    def test_translator_doesnt_accept_non_unique_enums(self):
+        self.assertRaises(ValueError, utils.EnumValueTranslator, NonUniqueEnum)

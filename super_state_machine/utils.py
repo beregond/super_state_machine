@@ -1,6 +1,6 @@
 """Utilities for core."""
 
-from enum import Enum
+from enum import Enum, unique
 from functools import wraps
 
 from .errors import TransitionError, AmbiguityError
@@ -116,17 +116,9 @@ class EnumValueTranslator(object):
         :param enum base_enum: Enum, to which elements values are translated.
 
         """
+        base_enum = unique(base_enum)
         self.base_enum = base_enum
-
-        root = {}
-        for enum in base_enum:
-            tmp_root = root
-            for letter in enum.value:
-                tmp_root = tmp_root.setdefault(letter, {})
-                enum_container = tmp_root.setdefault('items', [])
-                enum_container.append(enum)
-
-        self.tree = root
+        self._generate_values_tree()
 
     def translate(self, value):
         """Translate value to enum instance.
@@ -135,15 +127,24 @@ class EnumValueTranslator(object):
         enum.
 
         """
-        if isinstance(value, Enum):
-            if value not in self.base_enum:
-                raise ValueError(
-                    "Given value ('{}') doesn't belongs to given enum."
-                    .format(value))
-
+        is_proper = self._check_value(value)
+        if is_proper:
             return value
 
-        root = self.tree
+        items = self._get_matching_items(value)
+        if len(items) == 1:
+            return items[0]
+        else:
+            raise AmbiguityError(
+                "Can't decide which value is proper for value '{}', "
+                "available choices are: {}.".format(
+                    value,
+                    ", ".join(
+                        "'{} - {}'".format(e, e.value) for e in items),
+                ))
+
+    def _get_matching_items(self, value):
+        root = self._values_tree
         for letter in value:
             try:
                 root = root[letter]
@@ -151,13 +152,24 @@ class EnumValueTranslator(object):
                 raise ValueError(
                     "Wrong value given to translate ('{}')".format(value))
 
-        if len(root['items']) == 1:
-            return root['items'][0]
+        return root['items']
 
-        raise AmbiguityError(
-            "Can't decide which value is proper for value '{}', "
-            "available choices are: {}.".format(
-                value,
-                ", ".join(
-                    "'{} - {}'".format(e, e.value) for e in root['items']),
-            ))
+    def _generate_values_tree(self):
+        root = {}
+        for enum in self.base_enum:
+            tmp_root = root
+            for letter in enum.value:
+                tmp_root = tmp_root.setdefault(letter, {})
+                enum_container = tmp_root.setdefault('items', [])
+                enum_container.append(enum)
+
+        self._values_tree = root
+
+    def _check_value(self, value):
+        if isinstance(value, Enum):
+            if value not in self.base_enum:
+                raise ValueError(
+                    "Given value ('{}') doesn't belongs to given enum."
+                    .format(value))
+
+            return True
