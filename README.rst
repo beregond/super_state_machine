@@ -55,7 +55,7 @@ Features
     >>> task.state
     'processing'
     >>> task.state = 'wrong'
-    *** ValueError
+    *** ValueError: Wrong value given to translate ('wrong')
 
 * Define allowed transitions graph, define additional named transitions
   and checkers:
@@ -105,6 +105,40 @@ Features
     'failed'
 
   Note, that third argument restricts from which states transition will be
-  **added** to allowed (in case of `process`, new allowed transition will be
+  **added** to allowed (in case of ``process``, new allowed transition will be
   added, from 'scheduled' to 'processing'). No argument means all available
-  states, `None` or empty list won't add anything beyond defined ones.
+  states, ``None`` or empty list won't add anything beyond defined ones.
+
+* You can also define short version of all transition values like:
+
+  .. code-block:: python
+
+    >>> class Task(machine.StateMachine):
+    ...
+    ...     class States(Enum):
+    ...
+    ...         DRAFT = 'draft'
+    ...         SCHEDULED = 'scheduled'
+    ...         PROCESSING = 'processing'
+    ...         SENT = 'sent'
+    ...         FAILED = 'failed'
+    ...
+    ...     class Meta:
+    ...
+    ...         allow_empty = False
+    ...         initial_state = 'd'
+    ...         transitions = {
+    ...             'd': ['sc', 'f'],
+    ...             'sc': ['f'],
+    ...             'p': ['se', 'f']
+    ...         }
+    ...         named_transitions = [
+    ...             ('process', 'p', ['sc']),
+    ...             ('fail', 'f')
+    ...         ]
+    ...         named_checkers = [
+    ...             ('can_be_processed', 'p'),
+    ...         ]
+
+  Result code will behave the same as example above. Note also that you can
+  always pass also enum values instead of strings.
