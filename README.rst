@@ -29,10 +29,10 @@ Features
 
     >>> from enum import Enum
 
-    >>> from super_state_machine import machine
+    >>> from super_state_machine import machines
 
 
-    >>> class Task(machine.StateMachine):
+    >>> class Task(machines.StateMachine):
     ...
     ...    class States(Enum):
     ...
@@ -62,7 +62,7 @@ Features
 
   .. code-block:: python
 
-    >>> class Task(machine.StateMachine):
+    >>> class Task(machines.StateMachine):
     ...
     ...     class States(Enum):
     ...

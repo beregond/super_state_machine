@@ -1,7 +1,7 @@
 import unittest
 from enum import Enum
 
-from super_state_machine import machine, errors
+from super_state_machine import machines, errors
 
 
 class StatesEnum(Enum):
@@ -21,7 +21,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_transitions(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -61,7 +61,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_reduced_transition_graph(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -88,7 +88,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_transitions_checkers(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -134,7 +134,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_transitions_checkers_with_complete_graph(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -158,7 +158,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_named_transitions_checkers(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -188,7 +188,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_named_transitions_checkers_cant_overwrite_methods(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -210,7 +210,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_named_checkers_cant_overwrite_generated_methods(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -232,7 +232,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_named_checkers_dont_accept_wrong_values(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -254,7 +254,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_named_checkers_dont_accept_wrong_enums(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -276,7 +276,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_transitions_with_wrong_enum(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -295,7 +295,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_transition_graph_is_complete(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -312,7 +312,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_named_transitions(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -341,7 +341,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_named_transitions_collisions(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -369,7 +369,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_named_transitions_collisions_with_auto_generated_methods(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -389,7 +389,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_named_transitions_wrong_value(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -409,7 +409,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_named_transitions_wrong_enum(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -428,7 +428,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_named_transitions_are_in_state_graph(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -449,7 +449,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
 
     def test_named_transitions_with_restricted_source(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -478,7 +478,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_restricted_source_proper_value(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -499,7 +499,7 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
     def test_restricted_source_proper_enum(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 

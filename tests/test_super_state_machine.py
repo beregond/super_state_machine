@@ -1,7 +1,7 @@
 import unittest
 from enum import Enum
 
-from super_state_machine import machine, errors
+from super_state_machine import machines, errors
 
 
 class StatesEnum(Enum):
@@ -20,7 +20,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_state_machine_state_is_none(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             class States(Enum):
 
@@ -33,7 +33,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_state_machine_is_always_scalar(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             class States(Enum):
 
@@ -48,7 +48,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_state_machine_allow_scalars_on_init(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             class States(Enum):
 
@@ -64,7 +64,7 @@ class TestSuperStateMachine(unittest.TestCase):
     def test_state_machine_init_value_ambiguity(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 class States(Enum):
 
@@ -87,7 +87,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 class States(Enum):
 
@@ -105,7 +105,7 @@ class TestSuperStateMachine(unittest.TestCase):
     def test_state_machine_doesnt_allow_wrong_scalars(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 class States(Enum):
 
@@ -123,7 +123,7 @@ class TestSuperStateMachine(unittest.TestCase):
     def test_state_machine_accepts_only_unique_enums(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 class States(Enum):
 
@@ -138,7 +138,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_state_machine_allows_to_change_and_check_state(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             class States(Enum):
 
@@ -158,7 +158,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_state_machine_allows_to_change_and_check_state_by_methods(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             class States(Enum):
 
@@ -179,7 +179,7 @@ class TestSuperStateMachine(unittest.TestCase):
     def test_name_collistion_for_checker_raises_exception(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 class States(Enum):
 
@@ -198,7 +198,7 @@ class TestSuperStateMachine(unittest.TestCase):
     def test_name_collistion_for_setter_raises_exception(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 class States(Enum):
 
@@ -216,7 +216,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_states_enum_can_be_predefined(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
             state = StatesEnum.ONE
@@ -226,7 +226,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_state_deleter(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
             state = StatesEnum.ONE
@@ -238,7 +238,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_disallow_empty(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
             state = StatesEnum.ONE
@@ -262,7 +262,7 @@ class TestSuperStateMachine(unittest.TestCase):
     def test_states_enum_is_always_given(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 pass
 
@@ -274,7 +274,7 @@ class TestSuperStateMachine(unittest.TestCase):
     def test_states_enum_is_always_enum(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = 'something'
 
@@ -286,7 +286,7 @@ class TestSuperStateMachine(unittest.TestCase):
     def test_disallow_empty_without_initial_value(self):
         try:
 
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -301,7 +301,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_initial_value(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
             state = StatesEnum.ONE
@@ -316,7 +316,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_wrong_initial_value_from_class_is_ignored(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
             state = 'wrong'
@@ -331,7 +331,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_initial_value_from_meta_and_disallowed_empty(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -346,7 +346,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_disallow_assignation_of_wrong_value(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             class States(Enum):
 
@@ -364,7 +364,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_checker_getter_and_setter_wrong_values_and_enums(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -383,7 +383,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_get_actual_state_as_enum(self):
 
-        class Machine(machine.StateMachine):
+        class Machine(machines.StateMachine):
 
             States = StatesEnum
 
@@ -398,7 +398,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_actual_state_name_collision(self):
         try:
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
@@ -412,7 +412,7 @@ class TestSuperStateMachine(unittest.TestCase):
 
     def test_actual_state_name_collision_with_generated_methods(self):
         try:
-            class Machine(machine.StateMachine):
+            class Machine(machines.StateMachine):
 
                 States = StatesEnum
 
