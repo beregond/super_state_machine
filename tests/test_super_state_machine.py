@@ -426,3 +426,49 @@ class TestSuperStateMachine(unittest.TestCase):
             pass
         else:
             raise AssertionError('ValueError should be raised.')
+
+    def test_as_enum(self):
+
+        class Machine(machines.StateMachine):
+
+            States = StatesEnum
+
+        sm = Machine()
+        self.assertIsNone(sm.as_enum)
+        sm.set_one()
+        self.assertIs(sm.as_enum, StatesEnum.ONE)
+        sm.set_two()
+        self.assertIs(sm.as_enum, StatesEnum.TWO)
+        del sm.state
+        self.assertIsNone(sm.as_enum)
+
+    def test_as_enum_name_collision(self):
+        try:
+            class Machine(machines.StateMachine):
+
+                States = StatesEnum
+
+                def as_enum(self):
+                    pass
+
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('ValueError should be raised.')
+
+    def test_as_enum_name_collision_with_generated_methods(self):
+        try:
+            class Machine(machines.StateMachine):
+
+                States = StatesEnum
+
+                class Meta:
+
+                    named_transitions = [
+                        ('as_enum', 'one'),
+                    ]
+
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('ValueError should be raised.')

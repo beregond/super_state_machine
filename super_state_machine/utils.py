@@ -106,6 +106,11 @@ def actual_state(self):
     return getattr(self, attr)
 
 
+@property
+def as_enum(self):
+    return self.actual_state
+
+
 class EnumValueTranslator(object):
 
     """Helps to find enum element by (part of) its value."""
