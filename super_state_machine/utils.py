@@ -132,7 +132,7 @@ class EnumValueTranslator(object):
         enum.
 
         """
-        is_proper = self._check_value(value)
+        is_proper = self._check_if_already_proper(value)
         if is_proper:
             return value
 
@@ -157,20 +157,31 @@ class EnumValueTranslator(object):
                 raise ValueError(
                     "Wrong value given to translate ('{}')".format(value))
 
-        return root['items']
+        try:
+            return root['hit']
+        except KeyError:
+            return root['items']
 
     def _generate_values_tree(self):
         root = {}
+
         for enum in self.base_enum:
             tmp_root = root
+            index = 1
+            length = len(enum.value)
+
             for letter in enum.value:
                 tmp_root = tmp_root.setdefault(letter, {})
-                enum_container = tmp_root.setdefault('items', [])
-                enum_container.append(enum)
+                if index == length:
+                    tmp_root['hit'] = [enum]
+                else:
+                    enum_container = tmp_root.setdefault('items', [])
+                    enum_container.append(enum)
+                index += 1
 
         self._values_tree = root
 
-    def _check_value(self, value):
+    def _check_if_already_proper(self, value):
         if isinstance(value, Enum):
             if value not in self.base_enum:
                 raise ValueError(
@@ -178,3 +189,5 @@ class EnumValueTranslator(object):
                     .format(value))
 
             return True
+
+        return False

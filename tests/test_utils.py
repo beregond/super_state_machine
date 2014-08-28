@@ -24,6 +24,14 @@ class NonUniqueEnum(Enum):
     THREE = 'one'
 
 
+class CollidingEnum(Enum):
+
+    OPEN = 'open'
+    OPENING = 'opening'
+    CLOSE = 'close'
+    CLOSED = 'closed'
+
+
 class TestSuperStateMachineEnumValueTranslator(unittest.TestCase):
 
     def test_translator(self):
@@ -59,3 +67,13 @@ class TestSuperStateMachineEnumValueTranslator(unittest.TestCase):
 
     def test_translator_doesnt_accept_non_unique_enums(self):
         self.assertRaises(ValueError, utils.EnumValueTranslator, NonUniqueEnum)
+
+    def test_colliding_enum(self):
+        trans = utils.EnumValueTranslator(CollidingEnum)
+        self.assertRaises(ValueError, trans.translate, 'ope')
+        self.assertIs(trans.translate('open'), CollidingEnum.OPEN)
+        self.assertIs(trans.translate('openi'), CollidingEnum.OPENING)
+        self.assertRaises(ValueError, trans.translate, 'clos')
+        self.assertIs(trans.translate('close'), CollidingEnum.CLOSE)
+        self.assertIs(trans.translate('closed'), CollidingEnum.CLOSED)
+
