@@ -108,6 +108,7 @@ def actual_state(self):
 
 @property
 def as_enum(self):
+    """Return actual state as enum."""
     return self.actual_state
 
 

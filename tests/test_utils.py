@@ -76,4 +76,3 @@ class TestSuperStateMachineEnumValueTranslator(unittest.TestCase):
         self.assertRaises(ValueError, trans.translate, 'clos')
         self.assertIs(trans.translate('close'), CollidingEnum.CLOSE)
         self.assertIs(trans.translate('closed'), CollidingEnum.CLOSED)
-
