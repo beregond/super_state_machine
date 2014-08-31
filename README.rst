@@ -55,7 +55,7 @@ Features
     >>> task.state
     'processing'
     >>> task.state = 'wrong'
-    *** ValueError: Wrong value given to translate ('wrong')
+    *** ValueError: Unrecognized value ('wrong').
 
 * Define allowed transitions graph, define additional named transitions
   and checkers:

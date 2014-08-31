@@ -156,7 +156,7 @@ class EnumValueTranslator(object):
                 root = root[letter]
             except KeyError:
                 raise ValueError(
-                    "Wrong value given to translate ('{}')".format(value))
+                    "Unrecognized value ('{}').".format(value))
 
         try:
             return root['hit']
@@ -186,7 +186,7 @@ class EnumValueTranslator(object):
         if isinstance(value, Enum):
             if value not in self.base_enum:
                 raise ValueError(
-                    "Given value ('{}') doesn't belongs to given enum."
+                    "Given value ('{}') doesn't belong to states enum."
                     .format(value))
 
             return True
