@@ -8,10 +8,10 @@ import six
 from . import utils
 
 
-def _get_config(meta, attr, default=[]):
-    for m in [meta, DefaultMeta]:
+def _get_config(original_meta, attr, default=[]):
+    for meta in [original_meta, DefaultMeta]:
         try:
-            return getattr(m, attr)
+            return getattr(meta, attr)
         except AttributeError:
             pass
 
@@ -27,6 +27,7 @@ class DefaultMeta(object):
 
     states_enum_name = 'States'
     allow_empty = True
+    initial_state = None
 
 
 class _AttributeDict(dict):
@@ -102,7 +103,7 @@ class StateMachineMetaclass(type):
     @classmethod
     def _check_state_value(cls):
         """Check initial state value - if is proper and translate it."""
-        state_value = cls.context.get_config('initial_state', None)
+        state_value = cls.context.get_config('initial_state')
         state_value = state_value or getattr(
             cls.context.new_class, cls.context.state_name, None)
 
