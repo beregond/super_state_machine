@@ -472,3 +472,16 @@ class TestSuperStateMachine(unittest.TestCase):
             pass
         else:
             raise AssertionError('ValueError should be raised.')
+
+    def test_custom_states_enum(self):
+
+        class Machine(machines.StateMachine):
+
+            trololo = StatesEnum
+
+            class Meta:
+
+                states_enum_name = 'trololo'
+
+        machine = Machine()
+        self.assertIs(machine.is_one, False)
