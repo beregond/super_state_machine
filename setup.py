@@ -3,6 +3,8 @@
 
 import sys
 
+from super_state_machine import __version__ as version
+
 try:
     from setuptools import setup
 except ImportError:
@@ -22,7 +24,7 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
     name='super_state_machine',
-    version='0.1.0',
+    version=version,
     description='Super State Machine gives you utilities to build finite state machines.',
     long_description=readme + '\n\n' + history,
     author='Szczepan Cieślik',
