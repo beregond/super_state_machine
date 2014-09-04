@@ -100,6 +100,19 @@ states are and start using it.
   >>> task.state = 'wrong'
   *** ValueError: Unrecognized value ('wrong').
 
+Actual state as enum
+--------------------
+
+You can also get actual state in enum form by property ``actual_state``, or
+``as_enum``:
+
+.. code-block:: python
+
+  >>> task.actual_state
+  <States.DRAFT: 'draft'>
+  >>> task.as_enum
+  <States.DRAFT: 'draft'>
+
 Transitions
 -----------
 
@@ -404,6 +417,16 @@ Thanks to ``extras`` module you can use state machines as properties!
   >>> safe.lock3 = 'open'
   >>> safe.is_open()
   True
+
+In this case method ``as_enum`` is really handy:
+
+.. code-block:: python
+
+  >>> safe.lock1.as_enum
+  <States.OPEN: 'open'>
+
+Although you could also use ``actual_state`` here (yet ``as_enum`` sound more
+familiar).
 
 .. warning::
 
