@@ -142,3 +142,62 @@ Features
 
   Result code will behave the same as example above. Note also that you can
   always pass also enum values instead of strings.
+
+* Use state machines as properties:
+
+.. code-block:: python
+
+  >>> from enum import Enum
+
+  >>> from super_state_machine import machines, extras
+
+
+  >>> class Lock(machine.StateMachine):
+
+  ...     class States(Enum):
+  ...
+  ...         OPEN = 'open'
+  ...         LOCKED = 'locked'
+  ...
+  ...     class Meta:
+  ...
+  ...         allow_empty = False
+  ...         initial_state = 'locked'
+  ...         named_transitions = [
+  ...             ('open', 'o'),
+  ...             ('lock', 'l'),
+  ...         ]
+
+
+  >>> class Safe(object):
+  ...
+  ...     lock1 = extras.PropertyMachine(Lock)
+  ...     lock2 = extras.PropertyMachine(Lock)
+  ...     lock3 = extras.PropertyMachine(Lock)
+  ...
+  ...     _locks = ['lock1', 'lock2', 'lock3']
+  ...
+  ...     def is_locked(self):
+  ...          locks = [getattr(self, lock).is_locked for lock in self._locks]
+  ...          return any(locks)
+  ...
+  ...     def is_open(self):
+  ...         locks = [getattr(self, lock).is_open for lock in self._locks]
+  ...         return all(locks)
+
+  >>> safe = Safe()
+  >>> safe.lock1
+  'locked'
+  >>> safe.is_open
+  False
+  >>> safe.lock1.open()
+  >>> safe.lock1.is_open
+  True
+  >>> safe.lock1
+  'open'
+  >>> safe.is_open
+  False
+  >>> safe.lock2.open()
+  >>> safe.lock3 = 'open'
+  >>> safe.is_open
+  True

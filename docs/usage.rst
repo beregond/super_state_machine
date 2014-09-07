@@ -404,18 +404,18 @@ Thanks to ``extras`` module you can use state machines as properties!
   >>> safe = Safe()
   >>> safe.lock1
   'locked'
-  >>> safe.is_open()
+  >>> safe.is_open
   False
   >>> safe.lock1.open()
   >>> safe.lock1.is_open
   True
   >>> safe.lock1
   'open'
-  >>> safe.is_open()
+  >>> safe.is_open
   False
   >>> safe.lock2.open()
   >>> safe.lock3 = 'open'
-  >>> safe.is_open()
+  >>> safe.is_open
   True
 
 In this case method ``as_enum`` is really handy:
@@ -425,7 +425,7 @@ In this case method ``as_enum`` is really handy:
   >>> safe.lock1.as_enum
   <States.OPEN: 'open'>
 
-Although you could also use ``actual_state`` here (yet ``as_enum`` sound more
+Although you could also use ``actual_state`` here (yet ``as_enum`` sounds more
 familiar).
 
 .. warning::
