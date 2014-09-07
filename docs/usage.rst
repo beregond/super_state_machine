@@ -175,6 +175,20 @@ method ``set_processing`` but sounds better. Also all "from" states are
 
     :ref:`option_complete`
 
+Forced set (forced transition)
+------------------------------
+
+You can also use ``force_set`` which will change current state to any other
+**proper** state without checkint if such transition is allowed. It may be seen
+as 'hard reset' to some state.
+
+.. code-block:: python
+
+  >>> task.force_set('draft')
+  >>> task.force_set(Task.States.SCHEDULED)
+
+.. versionadded:: 2.0
+
 Checkers
 --------
 

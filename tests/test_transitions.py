@@ -516,3 +516,75 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
             pass
         else:
             raise AssertionError('ValueError should be raised.')
+
+    def test_force_set(self):
+
+        class Machine(machines.StateMachine):
+
+            States = StatesEnum
+
+            class Meta:
+
+                transitions = {
+                    'o': ['tw', 'th'],
+                }
+
+        machine = Machine()
+        machine.state = 'one'
+        self.assertIs(machine.can_be_four, False)
+        self.assertRaises(errors.TransitionError, machine.set_four)
+        self.assertEqual(machine.state, 'one')
+        machine.force_set('four')
+        self.assertEqual(machine.state, 'four')
+
+    def test_force_set_name_collision(self):
+        try:
+
+            class Machine(machines.StateMachine):
+
+                States = StatesEnum
+
+                def force_set(self):
+                    pass
+
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('ValueError should be raised.')
+
+    def test_force_set_name_collision_with_generated_methods(self):
+        try:
+
+            class Machine(machines.StateMachine):
+
+                States = StatesEnum
+
+                class Meta:
+
+                    named_transitions = [
+                        ('force_set', 'one')
+                    ]
+
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('ValueError should be raised.')
+
+    def test_force_set_accepts_only_proper_values(self):
+
+        class Machine(machines.StateMachine):
+
+            States = StatesEnum
+
+            class Meta:
+
+                complete = False
+
+        machine = Machine()
+        machine.state = 'one'
+        self.assertIs(machine.can_be_four, False)
+        machine.force_set('four')
+        machine.force_set(StatesEnum.FOUR)
+        machine.force_set('f')
+        self.assertRaises(ValueError, machine.force_set, 'fourtyfour')
+        self.assertRaises(ValueError, machine.force_set, OtherEnum.ONE)

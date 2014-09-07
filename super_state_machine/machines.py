@@ -175,6 +175,7 @@ class StateMachineMetaclass(type):
 
         cls.context.new_methods['actual_state'] = utils.actual_state
         cls.context.new_methods['as_enum'] = utils.as_enum
+        cls.context.new_methods['force_set'] = utils.force_set
 
     @classmethod
     def _generate_named_checkers(cls):

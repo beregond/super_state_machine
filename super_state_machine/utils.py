@@ -28,18 +28,23 @@ def can_be_(self, state):
     return state in transitions
 
 
-def set_(self, state):
-    """Set new state for machine."""
+def force_set(self, state):
+    """Set new state without checking if transition is allowed."""
     translator = self._meta['translator']
     state = translator.translate(state)
+    attr = self._meta['state_attribute_name']
+    setattr(self, attr, state)
 
+
+def set_(self, state):
+    """Set new state for machine."""
     if not self.can_be_(state):
+        state = self._meta['translator'].translate(state)
         raise TransitionError(
             "Cannot transit from '{}' to '{}'.".format(
                 self.actual_state.value, state.value))
 
-    attr = self._meta['state_attribute_name']
-    setattr(self, attr, state)
+    self.force_set(state)
 
 
 def state_getter(self):
