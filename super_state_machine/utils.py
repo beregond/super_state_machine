@@ -38,6 +38,10 @@ def force_set(self, state):
 
 def set_(self, state):
     """Set new state for machine."""
+    if state == '':
+        state_deleter(self)
+        return
+
     if not self.can_be_(state):
         state = self._meta['translator'].translate(state)
         raise TransitionError(

@@ -485,3 +485,22 @@ class TestSuperStateMachine(unittest.TestCase):
 
         machine = Machine()
         self.assertIs(machine.is_one, False)
+
+    def test_treat_empty_string_as_none(self):
+
+        class Machine(machines.StateMachine):
+
+            class States(Enum):
+
+                ONE = 'one'
+                TWO = 'two'
+                THREE = 'three'
+
+        sm = Machine()
+        self.assertIsNone(sm.state)
+        self.assertIs(sm.is_('one'), False)
+        sm.state = Machine.States.ONE
+        self.assertIs(sm.is_('one'), True)
+        sm.state = ''
+        self.assertIs(sm.is_('one'), False)
+        self.assertIsNone(sm.state)

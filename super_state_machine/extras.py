@@ -1,7 +1,5 @@
 """Extra utilities for state machines, to make them more usable."""
 
-import six
-
 
 class ProxyString(str):
 
@@ -27,32 +25,39 @@ class PropertyMachine(object):
         self._memory = {}
         self._machine_type = machine_type
 
-    def _check_machine(self, obj):
-        try:
-            machine = self._memory[obj]
-        except KeyError:
-            machine = self._machine_type()
-            self._memory[obj] = machine
-
     def __set__(self, obj, value):
         """Set state to machine."""
+        object_id = _generate_object_id(obj)
         self._check_machine(obj)
-        self._memory[obj].set_(value)
+        self._memory[object_id].set_(value)
 
     def __get__(self, obj, _type=None):
         """Get machine state."""
         if obj is None:
             return self
 
+        object_id = _generate_object_id(obj)
         self._check_machine(obj)
 
-        machine = self._memory[obj]
+        machine = self._memory[object_id]
         try:
             actual_state = machine.actual_state.value
         except AttributeError:
             actual_state = ''
 
         return ProxyString(actual_state, machine)
+
+    def _check_machine(self, obj):
+        object_id = _generate_object_id(obj)
+        try:
+            machine = self._memory[object_id]
+        except KeyError:
+            machine = self._machine_type()
+            self._memory[object_id] = machine
+
+
+def _generate_object_id(obj):
+    return hex(id(obj))
 
 
 class FieldMachine(object):
@@ -96,7 +101,7 @@ class FieldMachine(object):
         self.machine_type = machine_type
 
     @classmethod
-    def wrap(cls, wrapped_type):
+    def wrap(cls, wrapped_type, additional_attributes={}):
         """Wrap type metaclass, to hide field machine for initialization.
 
         Generated temporary class will hide instances of ``FieldMachine``,
@@ -107,25 +112,33 @@ class FieldMachine(object):
         :param wrapped_type: Some arbitrary type to wrap.
 
         """
-        wrapped_type = type(wrapped_type)
-        field_cls = cls
+        original_metaclass = type(wrapped_type)
 
-        class TemporaryMetaclass(type):
+        class TemporaryMetaclass(original_metaclass):
 
             def __new__(cls, name, bases, attrs):
-                tmp = {}
-                for name, value in attrs.items():
-                    if isinstance(value, field_cls):
-                        tmp[name] = value
-                        attrs[name] = value.field
+                exchange = {}
+                for attr_name, attr in attrs.items():
+                    if isinstance(attr, FieldMachine):
+                        exchange[attr_name] = attr
+                        attrs[attr_name] = attr.field
 
-                new_class = wrapped_type.__new__(
-                    wrapped_type, name, bases, attrs)
-
-                for name, value in tmp.items():
+                new_class = (super(TemporaryMetaclass, cls)
+                             .__new__(cls, name, bases, attrs))
+                for attr_name, attr in exchange.items():
                     setattr(
-                        new_class, name, PropertyMachine(value.machine_type))
+                        new_class,
+                        attr_name,
+                        PropertyMachine(attr.machine_type))
 
                 return new_class
 
-        return six.with_metaclass(TemporaryMetaclass)
+        new_attrs = wrapped_type.__dict__.copy()
+        new_attrs.pop('__dict__', None)
+        new_attrs.update(additional_attributes)
+
+        return TemporaryMetaclass(
+            wrapped_type.__name__,
+            (wrapped_type,),
+            new_attrs
+        )
