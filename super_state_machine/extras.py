@@ -58,10 +58,12 @@ class LoggingPropertyMachine(PropertyMachine):
     """Logging descriptor to help using machines as properties."""
 
     def __init__(self, machine_type, logger=None):
+        """Create logging descriptor."""
         super(LoggingPropertyMachine, self).__init__(self, machine_type)
         self._logger = logger
 
     def __set__(self, obj, value):
+        """Set state to machine with logging."""
         old_value = self.__get__(obj)
         super(LoggingPropertyMachine, self).__set__(self, obj, value)
         value = self.__get__(obj)
