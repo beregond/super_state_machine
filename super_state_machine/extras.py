@@ -54,7 +54,10 @@ class PropertyMachine(object):
 
 
 class LoggingPropertyMachine(PropertyMachine):
-    def __init__(self, machine_type, *, logger=None):
+
+    """Logging descriptor to help using machines as properties."""
+
+    def __init__(self, machine_type, logger=None):
         super(LoggingPropertyMachine, self).__init__(self, machine_type)
         self._logger = logger
 
