@@ -2,6 +2,7 @@
 # coding: utf8
 
 import sys
+from setuptools.command.test import test as TestCommand
 
 from super_state_machine import __version__ as version
 
@@ -10,14 +11,32 @@ try:
 except ImportError:
     from distutils.core import setup
 
-# Hacking unittest.
-try:
-    import tests
-    if 'test' in sys.argv and '--quick' in sys.argv:
-        tests.QUICK_TESTS = True
-        del sys.argv[sys.argv.index('--quick')]
-except ImportError:
-    pass
+
+PROJECT_NAME = 'super_state_machine'
+
+
+class PyTest(TestCommand):
+
+    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+
+    def initialize_options(self):
+        import tests
+        if 'test' in sys.argv and '--quick' in sys.argv:
+            tests.QUICK_TESTS = True
+            del sys.argv[sys.argv.index('--quick')]
+        TestCommand.initialize_options(self)
+        self.pytest_args = ['--cov', PROJECT_NAME]
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(self.pytest_args)
+        sys.exit(errno)
+
 
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
@@ -25,7 +44,10 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 setup(
     name='super_state_machine',
     version=version,
-    description='Super State Machine gives you utilities to build finite state machines.',
+    description=(
+        'Super State Machine gives you utilities '
+        'to build finite state machines.'
+    ),
     long_description=readme + '\n\n' + history,
     author='Szczepan Cieślik',
     author_email='szczepan.cieslik@gmail.com',
@@ -33,8 +55,7 @@ setup(
     packages=[
         'super_state_machine',
     ],
-    package_dir={'super_state_machine':
-                 'super_state_machine'},
+    package_dir={'super_state_machine': 'super_state_machine'},
     include_package_data=True,
     install_requires=[
         'enum34',
@@ -55,5 +76,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
     ],
-    test_suite='tests',
+    cmdclass={
+        'test': PyTest,
+    },
 )
