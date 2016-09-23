@@ -1,11 +1,9 @@
 """Tests for code."""
 
-import unittest
 import os
 import re
 import subprocess
 
-import tests
 
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 source_dir = os.path.join(root_dir, 'super_state_machine')
@@ -29,22 +27,20 @@ def _collect_static(dirs):
     return matches
 
 
-@unittest.skipIf(tests.QUICK_TESTS, "Quick tests.")
-class TestProject(unittest.TestCase):
+def test_pep257():
+    result = []
+    for filename in _collect_static([source_dir]):
+        result.append(subprocess.call(['pep257', filename]))
 
-    def test_pep257(self):
-        result = []
-        for filename in _collect_static([source_dir]):
-            result.append(subprocess.call(['pep257', filename]))
+    if any(result):
+        raise RuntimeError("Tests for PEP257 compliance have failed!")
 
-        if any(result):
-            raise RuntimeError("Tests for PEP257 compliance have failed!")
 
-    def test_pep8_and_complexity(self):
-        result = []
-        for filename in _collect_static([source_dir, tests_dir]):
-            result.append(subprocess.call(['flake8', filename]))
+def test_pep8_and_complexity():
+    result = []
+    for filename in _collect_static([source_dir, tests_dir]):
+        result.append(subprocess.call(['flake8', filename]))
 
-        if any(result):
-            raise RuntimeError(
-                "Tests for PEP8 compliance and complexity have failed!")
+    if any(result):
+        raise RuntimeError(
+            "Tests for PEP8 compliance and complexity have failed!")

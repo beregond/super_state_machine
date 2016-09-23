@@ -20,10 +20,6 @@ class PyTest(TestCommand):
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
 
     def initialize_options(self):
-        import tests
-        if 'test' in sys.argv and '--quick' in sys.argv:
-            tests.QUICK_TESTS = True
-            del sys.argv[sys.argv.index('--quick')]
         TestCommand.initialize_options(self)
         self.pytest_args = ['--cov', PROJECT_NAME]
 

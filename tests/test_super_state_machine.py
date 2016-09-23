@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from enum import Enum
 
 from super_state_machine import machines, errors
@@ -16,10 +16,54 @@ class OtherEnum(Enum):
     ONE = 'one'
 
 
-class TestSuperStateMachine(unittest.TestCase):
+def test_state_machine_state_is_none():
 
-    def test_state_machine_state_is_none(self):
+    class Machine(machines.StateMachine):
 
+        class States(Enum):
+
+            ONE = 'one'
+            TWO = 'two'
+            THREE = 'three'
+
+    sm = Machine()
+    assert sm.state is None
+
+
+def test_state_machine_is_always_scalar():
+
+    class Machine(machines.StateMachine):
+
+        class States(Enum):
+
+            ONE = 'one'
+            TWO = 'two'
+            THREE = 'three'
+
+        state = States.ONE
+
+    sm = Machine()
+    assert sm.state == 'one'
+
+
+def test_state_machine_allow_scalars_on_init():
+
+    class Machine(machines.StateMachine):
+
+        class States(Enum):
+
+            ONE = 'one'
+            TWO = 'two'
+            THREE = 'three'
+
+        state = 'tw'
+
+    sm = Machine()
+    assert sm.is_two is True
+
+
+def test_state_machine_init_value_ambiguity():
+    with pytest.raises(errors.AmbiguityError):
         class Machine(machines.StateMachine):
 
             class States(Enum):
@@ -28,11 +72,15 @@ class TestSuperStateMachine(unittest.TestCase):
                 TWO = 'two'
                 THREE = 'three'
 
-        sm = Machine()
-        self.assertIsNone(sm.state)
+            state = 't'
 
-    def test_state_machine_is_always_scalar(self):
 
+def test_state_machine_accepts_enums_only_from_proper_source():
+
+    class OtherEnum(Enum):
+        FOUR = 'four'
+
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             class States(Enum):
@@ -41,13 +89,11 @@ class TestSuperStateMachine(unittest.TestCase):
                 TWO = 'two'
                 THREE = 'three'
 
-            state = States.ONE
+            state = OtherEnum.FOUR
 
-        sm = Machine()
-        self.assertEqual(sm.state, 'one')
 
-    def test_state_machine_allow_scalars_on_init(self):
-
+def test_state_machine_doesnt_allow_wrong_scalars():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             class States(Enum):
@@ -56,88 +102,64 @@ class TestSuperStateMachine(unittest.TestCase):
                 TWO = 'two'
                 THREE = 'three'
 
-            state = 'tw'
+            state = 'four'
 
-        sm = Machine()
-        self.assertIs(sm.is_two, True)
 
-    def test_state_machine_init_value_ambiguity(self):
-        try:
+def test_state_machine_accepts_only_unique_enums():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
 
-            class Machine(machines.StateMachine):
+            class States(Enum):
 
-                class States(Enum):
+                ONE = 'one'
+                TWO = 'one'
+                THREE = 'three'
 
-                    ONE = 'one'
-                    TWO = 'two'
-                    THREE = 'three'
 
-                state = 't'
+def test_state_machine_allows_to_change_and_check_state():
 
-        except errors.AmbiguityError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
+    class Machine(machines.StateMachine):
 
-    def test_state_machine_accepts_enums_only_from_proper_source(self):
+        class States(Enum):
 
-        class OtherEnum(Enum):
+            ONE = 'one'
+            TWO = 'two'
+            THREE = 'three'
 
-            FOUR = 'four'
+    sm = Machine()
+    assert sm.state is None
+    assert sm.is_('one') is False
+    sm.state = Machine.States.ONE
+    assert sm.is_('one') is True
+    assert sm.state == 'one'
+    assert sm.is_('two') is False
+    sm.set_('two')
+    assert sm.is_('two') is True
 
-        try:
 
-            class Machine(machines.StateMachine):
+def test_state_machine_allows_to_change_and_check_state_by_methods():
 
-                class States(Enum):
+    class Machine(machines.StateMachine):
 
-                    ONE = 'one'
-                    TWO = 'two'
-                    THREE = 'three'
+        class States(Enum):
 
-                state = OtherEnum.FOUR
+            ONE = 'one'
+            TWO = 'two'
+            THREE = 'three'
 
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
+    sm = Machine()
+    assert sm.state is None
+    assert sm.is_one is False
+    sm.state = Machine.States.ONE
+    assert sm.is_one is True
+    assert sm.state == 'one'
+    assert sm.is_two is False
+    sm.set_two()
+    assert sm.is_two is True
 
-    def test_state_machine_doesnt_allow_wrong_scalars(self):
-        try:
 
-            class Machine(machines.StateMachine):
-
-                class States(Enum):
-
-                    ONE = 'one'
-                    TWO = 'two'
-                    THREE = 'three'
-
-                state = 'four'
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_state_machine_accepts_only_unique_enums(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                class States(Enum):
-
-                    ONE = 'one'
-                    TWO = 'one'
-                    THREE = 'three'
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_state_machine_allows_to_change_and_check_state(self):
-
+def test_name_collistion_for_checker_raises_exception():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             class States(Enum):
@@ -146,191 +168,84 @@ class TestSuperStateMachine(unittest.TestCase):
                 TWO = 'two'
                 THREE = 'three'
 
-        sm = Machine()
-        self.assertIsNone(sm.state)
-        self.assertIs(sm.is_('one'), False)
-        sm.state = Machine.States.ONE
-        self.assertIs(sm.is_('one'), True)
-        self.assertEqual(sm.state, 'one')
-        self.assertIs(sm.is_('two'), False)
-        sm.set_('two')
-        self.assertIs(sm.is_('two'), True)
-
-    def test_state_machine_allows_to_change_and_check_state_by_methods(self):
-
-        class Machine(machines.StateMachine):
-
-            class States(Enum):
-
-                ONE = 'one'
-                TWO = 'two'
-                THREE = 'three'
-
-        sm = Machine()
-        self.assertIsNone(sm.state)
-        self.assertIs(sm.is_one, False)
-        sm.state = Machine.States.ONE
-        self.assertIs(sm.is_one, True)
-        self.assertEqual(sm.state, 'one')
-        self.assertIs(sm.is_two, False)
-        sm.set_two()
-        self.assertIs(sm.is_two, True)
-
-    def test_name_collistion_for_checker_raises_exception(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                class States(Enum):
-
-                    ONE = 'one'
-                    TWO = 'two'
-                    THREE = 'three'
-
-                def is_one(self):
-                    pass
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_name_collistion_for_setter_raises_exception(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                class States(Enum):
-
-                    ONE = 'one'
-                    TWO = 'two'
-                    THREE = 'three'
-
-                def set_one(self):
-                    pass
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_states_enum_can_be_predefined(self):
-
-        class Machine(machines.StateMachine):
-
-            States = StatesEnum
-            state = StatesEnum.ONE
-
-        sm = Machine()
-        self.assertIs(sm.is_one, True)
-
-    def test_state_deleter(self):
-
-        class Machine(machines.StateMachine):
-
-            States = StatesEnum
-            state = StatesEnum.ONE
-
-        sm = Machine()
-        self.assertIs(sm.is_one, True)
-        del sm.state
-        self.assertIsNone(sm.state)
-
-    def test_disallow_empty(self):
-
-        class Machine(machines.StateMachine):
-
-            States = StatesEnum
-            state = StatesEnum.ONE
-
-            class Meta:
-
-                allow_empty = False
-
-        sm = Machine()
-        self.assertEqual(sm.state, 'one')
-        sm.set_two()
-        self.assertTrue(sm.is_two)
-
-        try:
-            del sm.state
-        except RuntimeError:
-            pass
-        else:
-            raise AssertionError('RuntimeError should be raised.')
-
-    def test_states_enum_is_always_given(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
+            def is_one():
                 pass
 
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
 
-    def test_states_enum_is_always_enum(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                States = 'something'
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_disallow_empty_without_initial_value(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    allow_empty = False
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_initial_value(self):
-
+def test_name_collistion_for_setter_raises_exception():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
-            States = StatesEnum
-            state = StatesEnum.ONE
+            class States(Enum):
 
-            class Meta:
+                ONE = 'one'
+                TWO = 'two'
+                THREE = 'three'
 
-                initial_state = StatesEnum.TWO
+            def set_one():
+                pass
 
-        sm = Machine()
-        self.assertEqual(sm.state, 'two')
-        self.assertIs(sm.is_two, True)
 
-    def test_wrong_initial_value_from_class_is_ignored(self):
+def test_states_enum_can_be_predefined():
 
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = StatesEnum.ONE
+
+    sm = Machine()
+    assert sm.is_one is True
+
+
+def test_state_deleter():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = StatesEnum.ONE
+
+    sm = Machine()
+    assert sm.is_one is True
+    del sm.state
+    assert sm.state is None
+
+
+def test_disallow_empty():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = StatesEnum.ONE
+
+        class Meta:
+
+            allow_empty = False
+
+    sm = Machine()
+    assert sm.state == 'one'
+    sm.set_two()
+    assert sm.is_two is True
+
+    with pytest.raises(RuntimeError):
+        del sm.state
+
+
+def test_states_enum_is_always_given():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
-            States = StatesEnum
-            state = 'wrong'
+            pass
 
-            class Meta:
 
-                initial_state = StatesEnum.TWO
+def test_states_enum_is_always_enum():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
 
-        sm = Machine()
-        self.assertEqual(sm.state, 'two')
-        self.assertIs(sm.is_two, True)
+            States = 'something'
 
-    def test_initial_value_from_meta_and_disallowed_empty(self):
 
+def test_disallow_empty_without_initial_value():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             States = StatesEnum
@@ -338,169 +253,210 @@ class TestSuperStateMachine(unittest.TestCase):
             class Meta:
 
                 allow_empty = False
-                initial_state = StatesEnum.TWO
 
-        sm = Machine()
-        self.assertEqual(sm.state, 'two')
-        self.assertIs(sm.is_two, True)
 
-    def test_disallow_assignation_of_wrong_value(self):
+def test_initial_value():
 
-        class Machine(machines.StateMachine):
+    class Machine(machines.StateMachine):
 
-            class States(Enum):
+        States = StatesEnum
+        state = StatesEnum.ONE
 
-                ONE = 'one'
-                TWO = 'two'
-                THREE = 'three'
+        class Meta:
 
-        sm = Machine()
-        sm.set_one()
-        self.assertIs(sm.is_one, True)
-        sm.set_(Machine.States.TWO)
-        self.assertIs(sm.is_two, True)
-        self.assertRaises(ValueError, sm.set_, StatesEnum.TWO)
-        self.assertRaises(ValueError, sm.set_, 'four')
+            initial_state = StatesEnum.TWO
 
-    def test_checker_getter_and_setter_wrong_values_and_enums(self):
+    sm = Machine()
+    assert sm.state == 'two'
+    assert sm.is_two is True
 
+
+def test_wrong_initial_value_from_class_is_ignored():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = 'wrong'
+
+        class Meta:
+
+            initial_state = StatesEnum.TWO
+
+    sm = Machine()
+    assert sm.state == 'two'
+    assert sm.is_two is True
+
+
+def test_initial_value_from_meta_and_disallowed_empty():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+
+        class Meta:
+
+            allow_empty = False
+            initial_state = StatesEnum.TWO
+
+    sm = Machine()
+    assert sm.state == 'two'
+    assert sm.is_two is True
+
+
+def test_disallow_assignation_of_wrong_value():
+
+    class Machine(machines.StateMachine):
+
+        class States(Enum):
+
+            ONE = 'one'
+            TWO = 'two'
+            THREE = 'three'
+
+    sm = Machine()
+    sm.set_one()
+    assert sm.is_one is True
+    sm.set_(Machine.States.TWO)
+    assert sm.is_two is True
+    with pytest.raises(ValueError):
+        sm.set_(StatesEnum.TWO)
+    with pytest.raises(ValueError):
+        sm.set_('four')
+
+
+def test_checker_getter_and_setter_wrong_values_and_enums():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+
+    sm = Machine()
+
+    sm.is_('one')
+    sm.can_be_('one')
+    sm.set_('one')
+
+    with pytest.raises(ValueError):
+        sm.is_('five')
+    with pytest.raises(ValueError):
+        sm.is_(OtherEnum.ONE)
+    with pytest.raises(ValueError):
+        sm.can_be_('five')
+    with pytest.raises(ValueError):
+        sm.can_be_(OtherEnum.ONE)
+    with pytest.raises(ValueError):
+        sm.set_('five')
+    with pytest.raises(ValueError):
+        sm.set_(OtherEnum.ONE)
+
+
+def test_get_actual_state_as_enum():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+
+    sm = Machine()
+    assert sm.actual_state is None
+    sm.set_one()
+    assert sm.actual_state is StatesEnum.ONE
+    sm.set_two()
+    assert sm.actual_state is StatesEnum.TWO
+    del sm.state
+    assert sm.actual_state is None
+
+
+def test_actual_state_name_collision():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             States = StatesEnum
 
-        sm = Machine()
+            def actual_state():
+                pass
 
-        sm.is_('one')
-        sm.can_be_('one')
-        sm.set_('one')
 
-        self.assertRaises(ValueError, sm.is_, 'five')
-        self.assertRaises(ValueError, sm.is_, OtherEnum.ONE)
-        self.assertRaises(ValueError, sm.can_be_, 'five')
-        self.assertRaises(ValueError, sm.can_be_, OtherEnum.ONE)
-        self.assertRaises(ValueError, sm.set_, 'five')
-        self.assertRaises(ValueError, sm.set_, OtherEnum.ONE)
-
-    def test_get_actual_state_as_enum(self):
-
+def test_actual_state_name_collision_with_generated_methods():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             States = StatesEnum
-
-        sm = Machine()
-        self.assertIsNone(sm.actual_state)
-        sm.set_one()
-        self.assertIs(sm.actual_state, StatesEnum.ONE)
-        sm.set_two()
-        self.assertIs(sm.actual_state, StatesEnum.TWO)
-        del sm.state
-        self.assertIsNone(sm.actual_state)
-
-    def test_actual_state_name_collision(self):
-        try:
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                def actual_state(self):
-                    pass
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_actual_state_name_collision_with_generated_methods(self):
-        try:
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    named_transitions = [
-                        ('actual_state', 'one'),
-                    ]
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_as_enum(self):
-
-        class Machine(machines.StateMachine):
-
-            States = StatesEnum
-
-        sm = Machine()
-        self.assertIsNone(sm.as_enum)
-        sm.set_one()
-        self.assertIs(sm.as_enum, StatesEnum.ONE)
-        sm.set_two()
-        self.assertIs(sm.as_enum, StatesEnum.TWO)
-        del sm.state
-        self.assertIsNone(sm.as_enum)
-
-    def test_as_enum_name_collision(self):
-        try:
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                def as_enum(self):
-                    pass
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_as_enum_name_collision_with_generated_methods(self):
-        try:
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    named_transitions = [
-                        ('as_enum', 'one'),
-                    ]
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_custom_states_enum(self):
-
-        class Machine(machines.StateMachine):
-
-            trololo = StatesEnum
 
             class Meta:
 
-                states_enum_name = 'trololo'
+                named_transitions = [
+                    ('actual_state', 'one'),
+                ]
 
-        machine = Machine()
-        self.assertIs(machine.is_one, False)
 
-    def test_treat_empty_string_as_none(self):
+def test_as_enum():
 
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+
+    sm = Machine()
+    assert sm.as_enum is None
+    sm.set_one()
+    assert sm.as_enum is StatesEnum.ONE
+    sm.set_two()
+    assert sm.as_enum is StatesEnum.TWO
+    del sm.state
+    assert sm.as_enum is None
+
+
+def test_as_enum_name_collision():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
-            class States(Enum):
+            States = StatesEnum
 
-                ONE = 'one'
-                TWO = 'two'
-                THREE = 'three'
+            def as_enum():
+                pass
 
-        sm = Machine()
-        self.assertIsNone(sm.state)
-        self.assertIs(sm.is_('one'), False)
-        sm.state = Machine.States.ONE
-        self.assertIs(sm.is_('one'), True)
-        sm.state = ''
-        self.assertIs(sm.is_('one'), False)
-        self.assertIsNone(sm.state)
+
+def test_as_enum_name_collision_with_generated_methods():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
+
+            States = StatesEnum
+
+            class Meta:
+
+                named_transitions = [
+                    ('as_enum', 'one'),
+                ]
+
+
+def test_custom_states_enum():
+
+    class Machine(machines.StateMachine):
+
+        trololo = StatesEnum
+
+        class Meta:
+
+            states_enum_name = 'trololo'
+
+    machine = Machine()
+    assert machine.is_one is False
+
+
+def test_treat_empty_string_as_none():
+
+    class Machine(machines.StateMachine):
+
+        class States(Enum):
+
+            ONE = 'one'
+            TWO = 'two'
+            THREE = 'three'
+
+    sm = Machine()
+    assert sm.state is None
+    assert sm.is_('one') is False
+    sm.state = Machine.States.ONE
+    assert sm.is_('one') is True
+    sm.state = ''
+    assert sm.is_('one') is False
+    assert sm.state is None

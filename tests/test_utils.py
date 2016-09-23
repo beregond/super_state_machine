@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from enum import Enum
 
 from super_state_machine import utils, errors
@@ -32,47 +32,60 @@ class CollidingEnum(Enum):
     CLOSED = 'closed'
 
 
-class TestSuperStateMachineEnumValueTranslator(unittest.TestCase):
+def test_translator():
+    trans = utils.EnumValueTranslator(StatesEnum)
+    assert trans.translate('one') == StatesEnum.ONE
+    assert trans.translate('o') == StatesEnum.ONE
+    assert trans.translate('two') == StatesEnum.TWO
+    assert trans.translate('tw') == StatesEnum.TWO
+    assert trans.translate('three') == StatesEnum.THREE
+    assert trans.translate('th') == StatesEnum.THREE
+    assert trans.translate('thr') == StatesEnum.THREE
+    assert trans.translate('thre') == StatesEnum.THREE
+    assert trans.translate('four') == StatesEnum.FOUR
+    assert trans.translate('f') == StatesEnum.FOUR
 
-    def test_translator(self):
-        trans = utils.EnumValueTranslator(StatesEnum)
-        self.assertEqual(trans.translate('one'), StatesEnum.ONE)
-        self.assertEqual(trans.translate('o'), StatesEnum.ONE)
-        self.assertEqual(trans.translate('two'), StatesEnum.TWO)
-        self.assertEqual(trans.translate('tw'), StatesEnum.TWO)
-        self.assertEqual(trans.translate('three'), StatesEnum.THREE)
-        self.assertEqual(trans.translate('th'), StatesEnum.THREE)
-        self.assertEqual(trans.translate('thr'), StatesEnum.THREE)
-        self.assertEqual(trans.translate('thre'), StatesEnum.THREE)
-        self.assertEqual(trans.translate('four'), StatesEnum.FOUR)
-        self.assertEqual(trans.translate('f'), StatesEnum.FOUR)
 
-    def test_translator_for_wrong_values(self):
-        trans = utils.EnumValueTranslator(StatesEnum)
-        self.assertRaises(ValueError, trans.translate, 'a')
-        self.assertRaises(ValueError, trans.translate, 'x')
-        self.assertRaises(ValueError, trans.translate, 'threex')
-        self.assertRaises(ValueError, trans.translate, 'threx')
-        self.assertRaises(ValueError, trans.translate, 'fake')
+def test_translator_for_wrong_values():
+    trans = utils.EnumValueTranslator(StatesEnum)
+    with pytest.raises(ValueError):
+        trans.translate('a')
+    with pytest.raises(ValueError):
+        trans.translate('x')
+    with pytest.raises(ValueError):
+        trans.translate('threex')
+    with pytest.raises(ValueError):
+        trans.translate('threx')
+    with pytest.raises(ValueError):
+        trans.translate('fake')
 
-    def test_translator_for_ambiguity(self):
-        trans = utils.EnumValueTranslator(StatesEnum)
-        self.assertRaises(errors.AmbiguityError, trans.translate, 't')
 
-    def test_translator_for_enum_value(self):
-        trans = utils.EnumValueTranslator(StatesEnum)
-        self.assertIs(trans.translate(StatesEnum.ONE), StatesEnum.ONE)
-        self.assertIs(trans.translate(StatesEnum.TWO), StatesEnum.TWO)
-        self.assertRaises(ValueError, trans.translate, OtherEnum.ONE)
+def test_translator_for_ambiguity():
+    trans = utils.EnumValueTranslator(StatesEnum)
+    with pytest.raises(errors.AmbiguityError):
+        trans.translate('t')
 
-    def test_translator_doesnt_accept_non_unique_enums(self):
-        self.assertRaises(ValueError, utils.EnumValueTranslator, NonUniqueEnum)
 
-    def test_colliding_enum(self):
-        trans = utils.EnumValueTranslator(CollidingEnum)
-        self.assertRaises(ValueError, trans.translate, 'ope')
-        self.assertIs(trans.translate('open'), CollidingEnum.OPEN)
-        self.assertIs(trans.translate('openi'), CollidingEnum.OPENING)
-        self.assertRaises(ValueError, trans.translate, 'clos')
-        self.assertIs(trans.translate('close'), CollidingEnum.CLOSE)
-        self.assertIs(trans.translate('closed'), CollidingEnum.CLOSED)
+def test_translator_for_enum_value():
+    trans = utils.EnumValueTranslator(StatesEnum)
+    assert trans.translate(StatesEnum.ONE) is StatesEnum.ONE
+    assert trans.translate(StatesEnum.TWO) is StatesEnum.TWO
+    with pytest.raises(ValueError):
+        trans.translate(OtherEnum.ONE)
+
+
+def test_translator_doesnt_accept_non_unique_enums():
+    with pytest.raises(ValueError):
+        utils.EnumValueTranslator(NonUniqueEnum)
+
+
+def test_colliding_enum():
+    trans = utils.EnumValueTranslator(CollidingEnum)
+    with pytest.raises(ValueError):
+        trans.translate('ope')
+    assert trans.translate('open') is CollidingEnum.OPEN
+    assert trans.translate('openi') is CollidingEnum.OPENING
+    with pytest.raises(ValueError):
+        trans.translate('clos')
+    assert trans.translate('close') is CollidingEnum.CLOSE
+    assert trans.translate('closed') is CollidingEnum.CLOSED
