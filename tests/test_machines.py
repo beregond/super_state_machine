@@ -411,3 +411,14 @@ def test_initial_state_is_required():
 
             class Meta:
                 pass
+
+
+def test_state_machine_allows_only_strings():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
+
+            class States(Enum):
+
+                ONE = 1
+                TWO = 'two'
+                THREE = 'three'

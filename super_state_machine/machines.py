@@ -11,19 +11,6 @@ from . import utils
 NotSet = object()
 
 
-def _get_config(original_meta, attr, default=NotSet):
-    for meta in [original_meta, DefaultMeta]:
-        try:
-            return getattr(meta, attr)
-        except AttributeError:
-            pass
-
-    if default is NotSet:
-        raise
-
-    return default
-
-
 class DefaultMeta(object):
 
     """Default configuration values."""
@@ -31,7 +18,7 @@ class DefaultMeta(object):
     states_enum_name = 'States'
 
 
-class _AttributeDict(dict):
+class AttributeDict(dict):
 
     def __setattr__(self, key, value):
         self[key] = value
@@ -56,6 +43,7 @@ class StateMachineMetaclass(type):
 
         cls._set_up_config_getter()
         cls._check_states_enum()
+        cls._check_if_states_are_strings()
         cls._set_up_translator()
         cls._calculate_state_name()
         cls._check_state_value()
@@ -75,7 +63,7 @@ class StateMachineMetaclass(type):
     @classmethod
     def _set_up_context(cls):
         """Create context to keep all needed variables in."""
-        cls.context = _AttributeDict()
+        cls.context = AttributeDict()
         cls.context.new_meta = {}
         cls.context.new_transitions = {}
         cls.context.new_methods = {}
@@ -100,6 +88,16 @@ class StateMachineMetaclass(type):
         if not proper:
             raise ValueError(
                 'Please provide enum instance to define available states.')
+
+    @classmethod
+    def _check_if_states_are_strings(cls):
+        """Check if all states are strings."""
+        for item in list(cls.context.states_enum):
+            if not isinstance(item.value, six.string_types):
+                raise ValueError(
+                    'Item {} is not string. Only strings are allowed.'.format(
+                        item.name
+                    ))
 
     @classmethod
     def _check_state_value(cls):
@@ -257,7 +255,7 @@ class StateMachineMetaclass(type):
     @classmethod
     def _set_up_config_getter(cls):
         meta = getattr(cls.context.new_class, 'Meta', DefaultMeta)
-        cls.context.get_config = partial(_get_config, meta)
+        cls.context.get_config = partial(get_config, meta)
 
     @classmethod
     def _set_up_translator(cls):
@@ -280,3 +278,16 @@ class StateMachineMetaclass(type):
 class StateMachine(six.with_metaclass(StateMachineMetaclass)):
 
     """State machine."""
+
+
+def get_config(original_meta, attribute, default=NotSet):
+    for meta in [original_meta, DefaultMeta]:
+        try:
+            return getattr(meta, attribute)
+        except AttributeError:
+            pass
+
+    if default is NotSet:
+        raise
+
+    return default
