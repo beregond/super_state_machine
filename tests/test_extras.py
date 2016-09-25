@@ -39,19 +39,3 @@ def test_property_machine():
     door.lock2.open()
     assert door.lock1 == 'open'
     assert door.lock2 == 'open'
-
-
-def test_can_be_property_of_non_hashable_objects():
-
-    class Door(object):
-
-        lock1 = extras.PropertyMachine(Lock)
-        lock2 = extras.PropertyMachine(Lock)
-
-        def __hash__(self):
-            raise RuntimeError('You shall not pass!')
-
-    door = Door()
-    assert door.lock1 == 'open'
-    assert door.lock2 == 'open'
-    door.lock1.lock()
