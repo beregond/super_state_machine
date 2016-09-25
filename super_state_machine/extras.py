@@ -29,18 +29,18 @@ class PropertyMachine(object):
 
     def __set__(self, instance, value):
         """Set state to machine."""
-        self._check_machine(instance)
+        self.check_memory(instance)
         self.memory[instance].set_(value)
 
     def __get__(self, instance, _type=None):
         """Get machine state."""
         if instance is None:
             return self
-        self._check_machine(instance)
+        self.check_memory(instance)
         machine = self.memory[instance]
         return ProxyString(machine.actual_state.value, machine)
 
-    def _check_machine(self, instance):
+    def check_memory(self, instance):
         try:
             self.memory[instance]
         except KeyError:
