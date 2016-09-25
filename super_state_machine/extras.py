@@ -25,7 +25,7 @@ class PropertyMachine(object):
     def __init__(self, machine_type):
         """Create descriptor."""
         self.memory = WeakKeyDictionary()
-        self._machine_type = machine_type
+        self.machine_type = machine_type
 
     def __set__(self, instance, value):
         """Set state to machine."""
@@ -42,7 +42,6 @@ class PropertyMachine(object):
 
     def _check_machine(self, instance):
         try:
-            machine = self.memory[instance]
+            self.memory[instance]
         except KeyError:
-            machine = self._machine_type()
-            self.memory[instance] = machine
+            self.memory[instance] = self.machine_type()
