@@ -3,7 +3,7 @@
 from enum import Enum, unique
 from functools import wraps
 
-from .errors import TransitionError, AmbiguityError
+from .errors import TransitionError
 
 
 def is_(self, state):
@@ -106,7 +106,7 @@ def as_enum(self):
 
 class EnumValueTranslator(object):
 
-    """Helps to find enum element by (part of) its value."""
+    """Helps to find enum element by its value."""
 
     def __init__(self, base_enum):
         """Init.
@@ -116,7 +116,12 @@ class EnumValueTranslator(object):
         """
         base_enum = unique(base_enum)
         self.base_enum = base_enum
-        self._generate_values_tree()
+        self.generate_search_table()
+
+    def generate_search_table(self):
+        self.search_table = {
+            item.value: item for item in list(self.base_enum)
+        }
 
     def translate(self, value):
         """Translate value to enum instance.
@@ -125,62 +130,22 @@ class EnumValueTranslator(object):
         enum.
 
         """
-        is_proper = self._check_if_already_proper(value)
-        if is_proper:
+        if self._check_if_already_proper(value):
             return value
 
-        items = self._get_matching_items(value)
-        if len(items) == 1:
-            return items[0]
-        else:
-            raise AmbiguityError(
-                "Can't decide which value is proper for value '{}', "
-                "available choices are: {}.".format(
-                    value,
-                    ", ".join(
-                        "'{} - {}'".format(e, e.value) for e in items),
-                ))
-
-    def _get_matching_items(self, value):
-        root = self._values_tree
-        for letter in value:
-            try:
-                root = root[letter]
-            except KeyError:
-                raise ValueError(
-                    "Unrecognized value ('{}').".format(value))
-
         try:
-            return root['hit']
+            return self.search_table[value]
         except KeyError:
-            return root['items']
-
-    def _generate_values_tree(self):
-        root = {}
-
-        for enum in self.base_enum:
-            tmp_root = root
-            index = 1
-            length = len(enum.value)
-
-            for letter in enum.value:
-                tmp_root = tmp_root.setdefault(letter, {})
-                if index == length:
-                    tmp_root['hit'] = [enum]
-                else:
-                    enum_container = tmp_root.setdefault('items', [])
-                    enum_container.append(enum)
-                index += 1
-
-        self._values_tree = root
+            raise ValueError("Value {value} doesn't match any state.".format(
+                value=value
+            ))
 
     def _check_if_already_proper(self, value):
         if isinstance(value, Enum):
-            if value not in self.base_enum:
-                raise ValueError(
-                    "Given value ('{}') doesn't belong to states enum."
-                    .format(value))
-
-            return True
-
+            if value in self.base_enum:
+                return True
+            raise ValueError(
+                "Given value ('{}') doesn't belong to states enum."
+                .format(value)
+            )
         return False

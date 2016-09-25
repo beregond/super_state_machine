@@ -1,7 +1,7 @@
 import pytest
 from enum import Enum
 
-from super_state_machine import machines, errors
+from super_state_machine import machines
 
 
 class StatesEnum(Enum):
@@ -42,23 +42,10 @@ def test_state_machine_allow_scalars_on_init():
             TWO = 'two'
             THREE = 'three'
 
-        state = 'tw'
+        state = 'two'
 
     sm = Machine()
     assert sm.is_two is True
-
-
-def test_state_machine_init_value_ambiguity():
-    with pytest.raises(errors.AmbiguityError):
-        class Machine(machines.StateMachine):
-
-            class States(Enum):
-
-                ONE = 'one'
-                TWO = 'two'
-                THREE = 'three'
-
-            state = 't'
 
 
 def test_state_machine_accepts_enums_only_from_proper_source():

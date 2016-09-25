@@ -55,35 +55,6 @@ def test_transitions():
     assert sm.is_one is True
 
 
-def test_reduced_transition_graph():
-
-    class Machine(machines.StateMachine):
-
-        States = StatesEnum
-        state = 'one'
-
-        class Meta:
-
-            transitions = {
-                'o': ['tw', 'th'],
-                'tw': ['o', 'th'],
-                'th': ['tw'],
-            }
-
-    sm = Machine()
-    assert sm.is_one is True
-    sm.set_two()
-    sm.set_three()
-
-    with pytest.raises(errors.TransitionError):
-        sm.set_one()
-    assert sm.is_three is True
-
-    with pytest.raises(errors.TransitionError):
-        sm.set_('one')
-    assert sm.is_three is True
-
-
 def test_transitions_checkers():
 
     class Machine(machines.StateMachine):
@@ -94,9 +65,9 @@ def test_transitions_checkers():
         class Meta:
 
             transitions = {
-                'o': ['tw', 'th'],
-                'tw': ['o', 'th'],
-                'th': ['tw', 'th'],
+                'one': ['two', 'three'],
+                'two': ['one', 'three'],
+                'three': ['two', 'three'],
             }
 
     sm = Machine()
@@ -138,9 +109,9 @@ def test_transitions_checkers_with_complete_graph():
 
             complete = True
             transitions = {
-                'o': ['tw', 'th'],
-                'tw': ['o', 'th'],
-                'th': ['tw', 'th'],
+                'one': ['two', 'three'],
+                'two': ['one', 'three'],
+                'three': ['two', 'three'],
             }
 
     sm = Machine()
@@ -163,9 +134,9 @@ def test_named_transitions_checkers():
 
             initial_state = 'one'
             transitions = {
-                'o': ['tw', 'th'],
-                'tw': ['o', 'th'],
-                'th': ['tw', 'th'],
+                'one': ['two', 'three'],
+                'two': ['one', 'three'],
+                'three': ['two', 'three'],
             }
             named_checkers = [
                 ('can_go_to_one', 'one'),
@@ -277,9 +248,9 @@ def test_named_transitions():
         class Meta:
 
             transitions = {
-                'o': ['tw', 'th'],
-                'tw': ['o', 'th'],
-                'th': ['tw'],
+                'one': ['two', 'three'],
+                'two': ['one', 'three'],
+                'three': ['two', 'three'],
             }
             named_transitions = [
                 ('run', 'two'),
@@ -400,8 +371,8 @@ def test_named_transitions_with_restricted_source():
         class Meta:
 
             named_transitions = [
-                ('confirm', 'two', 'o'),
-                ('cancel', 'three', ['o', 'tw']),
+                ('confirm', 'two', 'one'),
+                ('cancel', 'three', ['one', 'two']),
                 ('surprise', 'four', [])
             ]
 
@@ -459,7 +430,7 @@ def test_force_set():
         class Meta:
 
             transitions = {
-                'o': ['tw', 'th'],
+                'one': ['two', 'three'],
             }
 
     machine = Machine()
@@ -509,7 +480,7 @@ def test_force_set_accepts_only_proper_values():
     assert machine.can_be_four is False
     machine.force_set('four')
     machine.force_set(StatesEnum.FOUR)
-    machine.force_set('f')
+    machine.force_set('four')
     with pytest.raises(ValueError):
         machine.force_set('fourtyfour')
     with pytest.raises(ValueError):

@@ -1,7 +1,7 @@
 import pytest
 from enum import Enum
 
-from super_state_machine import utils, errors
+from super_state_machine import utils
 
 
 class StatesEnum(Enum):
@@ -35,15 +35,9 @@ class CollidingEnum(Enum):
 def test_translator():
     trans = utils.EnumValueTranslator(StatesEnum)
     assert trans.translate('one') == StatesEnum.ONE
-    assert trans.translate('o') == StatesEnum.ONE
     assert trans.translate('two') == StatesEnum.TWO
-    assert trans.translate('tw') == StatesEnum.TWO
     assert trans.translate('three') == StatesEnum.THREE
-    assert trans.translate('th') == StatesEnum.THREE
-    assert trans.translate('thr') == StatesEnum.THREE
-    assert trans.translate('thre') == StatesEnum.THREE
     assert trans.translate('four') == StatesEnum.FOUR
-    assert trans.translate('f') == StatesEnum.FOUR
 
 
 def test_translator_for_wrong_values():
@@ -60,12 +54,6 @@ def test_translator_for_wrong_values():
         trans.translate('fake')
 
 
-def test_translator_for_ambiguity():
-    trans = utils.EnumValueTranslator(StatesEnum)
-    with pytest.raises(errors.AmbiguityError):
-        trans.translate('t')
-
-
 def test_translator_for_enum_value():
     trans = utils.EnumValueTranslator(StatesEnum)
     assert trans.translate(StatesEnum.ONE) is StatesEnum.ONE
@@ -77,15 +65,3 @@ def test_translator_for_enum_value():
 def test_translator_doesnt_accept_non_unique_enums():
     with pytest.raises(ValueError):
         utils.EnumValueTranslator(NonUniqueEnum)
-
-
-def test_colliding_enum():
-    trans = utils.EnumValueTranslator(CollidingEnum)
-    with pytest.raises(ValueError):
-        trans.translate('ope')
-    assert trans.translate('open') is CollidingEnum.OPEN
-    assert trans.translate('openi') is CollidingEnum.OPENING
-    with pytest.raises(ValueError):
-        trans.translate('clos')
-    assert trans.translate('close') is CollidingEnum.CLOSE
-    assert trans.translate('closed') is CollidingEnum.CLOSED
