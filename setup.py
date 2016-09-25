@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# coding: utf8
+# coding: utf-8
 
 import sys
 from setuptools.command.test import test as TestCommand

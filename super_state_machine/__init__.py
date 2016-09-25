@@ -1,4 +1,4 @@
-# coding: utf8
+# coding: utf-8
 
 """Super state machine - package that helps creating state machines."""
 

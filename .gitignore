@@ -34,6 +34,7 @@ htmlcov
 .mr.developer.cfg
 .project
 .pydevproject
+.cache
 
 # Complexity
 output/*.html

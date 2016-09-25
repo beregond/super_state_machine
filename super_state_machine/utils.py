@@ -38,10 +38,6 @@ def force_set(self, state):
 
 def set_(self, state):
     """Set new state for machine."""
-    if state == '':
-        state_deleter(self)
-        return
-
     if not self.can_be_(state):
         state = self._meta['translator'].translate(state)
         raise TransitionError(
@@ -62,19 +58,6 @@ def state_getter(self):
 def state_setter(self, value):
     """Set new state for machine."""
     self.set_(value)
-
-
-def state_deleter(self):
-    """Delete state.
-
-    In fact just set actual state to `None`.
-
-    """
-    if not self._meta['config_getter']('allow_empty'):
-        raise RuntimeError('State cannot be empty.')
-
-    attr = self._meta['state_attribute_name']
-    setattr(self, attr, None)
 
 
 def generate_getter(value):
@@ -105,7 +88,7 @@ def generate_setter(value):
 
     return setter
 
-state_property = property(state_getter, state_setter, state_deleter)
+state_property = property(state_getter, state_setter)
 
 
 @property

@@ -16,20 +16,6 @@ class OtherEnum(Enum):
     ONE = 'one'
 
 
-def test_state_machine_state_is_none():
-
-    class Machine(machines.StateMachine):
-
-        class States(Enum):
-
-            ONE = 'one'
-            TWO = 'two'
-            THREE = 'three'
-
-    sm = Machine()
-    assert sm.state is None
-
-
 def test_state_machine_is_always_scalar():
 
     class Machine(machines.StateMachine):
@@ -120,6 +106,8 @@ def test_state_machine_allows_to_change_and_check_state():
 
     class Machine(machines.StateMachine):
 
+        state = 'one'
+
         class States(Enum):
 
             ONE = 'one'
@@ -127,9 +115,6 @@ def test_state_machine_allows_to_change_and_check_state():
             THREE = 'three'
 
     sm = Machine()
-    assert sm.state is None
-    assert sm.is_('one') is False
-    sm.state = Machine.States.ONE
     assert sm.is_('one') is True
     assert sm.state == 'one'
     assert sm.is_('two') is False
@@ -141,6 +126,8 @@ def test_state_machine_allows_to_change_and_check_state_by_methods():
 
     class Machine(machines.StateMachine):
 
+        state = 'one'
+
         class States(Enum):
 
             ONE = 'one'
@@ -148,9 +135,6 @@ def test_state_machine_allows_to_change_and_check_state_by_methods():
             THREE = 'three'
 
     sm = Machine()
-    assert sm.state is None
-    assert sm.is_one is False
-    sm.state = Machine.States.ONE
     assert sm.is_one is True
     assert sm.state == 'one'
     assert sm.is_two is False
@@ -197,19 +181,6 @@ def test_states_enum_can_be_predefined():
     assert sm.is_one is True
 
 
-def test_state_deleter():
-
-    class Machine(machines.StateMachine):
-
-        States = StatesEnum
-        state = StatesEnum.ONE
-
-    sm = Machine()
-    assert sm.is_one is True
-    del sm.state
-    assert sm.state is None
-
-
 def test_disallow_empty():
 
     class Machine(machines.StateMachine):
@@ -217,16 +188,8 @@ def test_disallow_empty():
         States = StatesEnum
         state = StatesEnum.ONE
 
-        class Meta:
-
-            allow_empty = False
-
     sm = Machine()
-    assert sm.state == 'one'
-    sm.set_two()
-    assert sm.is_two is True
-
-    with pytest.raises(RuntimeError):
+    with pytest.raises(AttributeError):
         del sm.state
 
 
@@ -307,6 +270,8 @@ def test_disallow_assignation_of_wrong_value():
 
     class Machine(machines.StateMachine):
 
+        state = 'one'
+
         class States(Enum):
 
             ONE = 'one'
@@ -329,6 +294,7 @@ def test_checker_getter_and_setter_wrong_values_and_enums():
     class Machine(machines.StateMachine):
 
         States = StatesEnum
+        state = 'one'
 
     sm = Machine()
 
@@ -355,15 +321,12 @@ def test_get_actual_state_as_enum():
     class Machine(machines.StateMachine):
 
         States = StatesEnum
+        state = 'one'
 
     sm = Machine()
-    assert sm.actual_state is None
-    sm.set_one()
     assert sm.actual_state is StatesEnum.ONE
     sm.set_two()
     assert sm.actual_state is StatesEnum.TWO
-    del sm.state
-    assert sm.actual_state is None
 
 
 def test_actual_state_name_collision():
@@ -394,15 +357,12 @@ def test_as_enum():
     class Machine(machines.StateMachine):
 
         States = StatesEnum
+        state = 'one'
 
     sm = Machine()
-    assert sm.as_enum is None
-    sm.set_one()
     assert sm.as_enum is StatesEnum.ONE
     sm.set_two()
     assert sm.as_enum is StatesEnum.TWO
-    del sm.state
-    assert sm.as_enum is None
 
 
 def test_as_enum_name_collision():
@@ -433,30 +393,21 @@ def test_custom_states_enum():
     class Machine(machines.StateMachine):
 
         trololo = StatesEnum
+        state = 'one'
 
         class Meta:
 
             states_enum_name = 'trololo'
 
     machine = Machine()
-    assert machine.is_one is False
+    assert machine.is_one is True
 
 
-def test_treat_empty_string_as_none():
+def test_initial_state_is_required():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
 
-    class Machine(machines.StateMachine):
+            States = StatesEnum
 
-        class States(Enum):
-
-            ONE = 'one'
-            TWO = 'two'
-            THREE = 'three'
-
-    sm = Machine()
-    assert sm.state is None
-    assert sm.is_('one') is False
-    sm.state = Machine.States.ONE
-    assert sm.is_('one') is True
-    sm.state = ''
-    assert sm.is_('one') is False
-    assert sm.state is None
+            class Meta:
+                pass

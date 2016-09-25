@@ -8,14 +8,17 @@ import six
 from . import utils
 
 
-def _get_config(original_meta, attr, default=[]):
+NotSet = object()
+
+
+def _get_config(original_meta, attr, default=NotSet):
     for meta in [original_meta, DefaultMeta]:
         try:
             return getattr(meta, attr)
         except AttributeError:
             pass
 
-    if isinstance(default, list):
+    if default is NotSet:
         raise
 
     return default
@@ -26,8 +29,6 @@ class DefaultMeta(object):
     """Default configuration values."""
 
     states_enum_name = 'States'
-    allow_empty = True
-    initial_state = None
 
 
 class _AttributeDict(dict):
@@ -102,22 +103,24 @@ class StateMachineMetaclass(type):
 
     @classmethod
     def _check_state_value(cls):
-        """Check initial state value - if is proper and translate it."""
-        state_value = cls.context.get_config('initial_state')
+        """Check initial state value - if is proper and translate it.
+
+        Initial state is required.
+        """
+        state_value = cls.context.get_config('initial_state', None)
         state_value = state_value or getattr(
-            cls.context.new_class, cls.context.state_name, None)
+            cls.context.new_class, cls.context.state_name, None
+        )
 
-        if state_value:
-            state_value = (
-                cls.context
-                .new_meta['translator']
-                .translate(state_value)
-            )
-
-        if not cls.context.get_config('allow_empty') and not state_value:
+        if not state_value:
             raise ValueError(
-                "Empty state is disallowed, yet no initial state is given!")
-
+                "Empty state is disallowed, yet no initial state is given!"
+            )
+        state_value = (
+            cls.context
+            .new_meta['translator']
+            .translate(state_value)
+        )
         cls.context.state_value = state_value
 
     @classmethod
