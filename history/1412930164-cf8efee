@@ -1,1 +1,0 @@
-[BCB] Empty string is treated as `None` when changing state.
