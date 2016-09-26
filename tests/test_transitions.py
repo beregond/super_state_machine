@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from enum import Enum
 
 from super_state_machine import machines, errors
@@ -17,284 +17,214 @@ class OtherEnum(Enum):
     ONE = 'one'
 
 
-class TestSuperStateMachineTransitions(unittest.TestCase):
+def test_transitions():
 
-    def test_transitions(self):
+    class Machine(machines.StateMachine):
 
-        class Machine(machines.StateMachine):
+        States = StatesEnum
+        state = StatesEnum.ONE
 
-            States = StatesEnum
+        class Meta:
 
-            class Meta:
+            transitions = {
+                StatesEnum.ONE: [StatesEnum.TWO, StatesEnum.THREE],
+                StatesEnum.TWO: [StatesEnum.ONE, StatesEnum.THREE],
+                StatesEnum.THREE: [StatesEnum.TWO],
+            }
 
-                transitions = {
-                    StatesEnum.ONE: [StatesEnum.TWO, StatesEnum.THREE],
-                    StatesEnum.TWO: [StatesEnum.ONE, StatesEnum.THREE],
-                    StatesEnum.THREE: [StatesEnum.TWO],
-                }
+    sm = Machine()
+    assert sm.is_one is True
+    sm.set_two()
+    sm.set_three()
 
-        sm = Machine()
-        self.assertIsNone(sm.state)
+    with pytest.raises(errors.TransitionError):
         sm.set_one()
-        self.assertIs(sm.is_one, True)
-        sm.set_two()
-        sm.set_three()
+    assert sm.is_three is True
 
-        self.assertRaises(errors.TransitionError, sm.set_one)
-        self.assertIs(sm.is_three, True)
+    with pytest.raises(errors.TransitionError):
+        sm.set_('one')
+    assert sm.is_three is True
 
-        self.assertRaises(errors.TransitionError, sm.set_, 'one')
-        self.assertIs(sm.is_three, True)
+    with pytest.raises(errors.TransitionError):
+        sm.state = 'one'
 
-        try:
-            sm.state = 'one'
-        except errors.TransitionError:
-            pass
-        else:
-            raise AssertionError('TransitionError should be raised.')
+    assert sm.is_three is True
 
-        self.assertIs(sm.is_three, True)
+    sm.set_two()
+    sm.set_one()
+    assert sm.is_one is True
 
-        sm.set_two()
+
+def test_transitions_checkers():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = 'one'
+
+        class Meta:
+
+            transitions = {
+                'one': ['two', 'three'],
+                'two': ['one', 'three'],
+                'three': ['two', 'three'],
+            }
+
+    sm = Machine()
+    assert sm.can_be_one is False
+    assert sm.can_be_two is True
+    assert sm.can_be_three is True
+    assert sm.can_be_four is False
+    assert sm.can_be_('one') is False
+    assert sm.can_be_('two') is True
+    assert sm.can_be_('three') is True
+    assert sm.can_be_('four') is False
+
+    with pytest.raises(errors.TransitionError):
         sm.set_one()
-        self.assertIs(sm.is_one, True)
 
-    def test_reduced_transition_graph(self):
+    sm.set_two()
+    assert sm.can_be_one is True
+    assert sm.can_be_two is False
+    assert sm.can_be_three is True
+    assert sm.can_be_four is False
 
+    sm.set_three()
+    assert sm.can_be_one is False
+    assert sm.can_be_two is True
+    assert sm.can_be_three is True
+    assert sm.can_be_four is False
+
+    sm.set_three()
+
+
+def test_transitions_checkers_with_complete_graph():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = 'one'
+
+        class Meta:
+
+            complete = True
+            transitions = {
+                'one': ['two', 'three'],
+                'two': ['one', 'three'],
+                'three': ['two', 'three'],
+            }
+
+    sm = Machine()
+    sm.set_three()
+    assert sm.can_be_one is True
+    assert sm.can_be_two is True
+    assert sm.can_be_three is True
+    assert sm.can_be_four is True
+    sm.set_four()
+    assert sm.is_four is True
+
+
+def test_named_transitions_checkers():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+
+        class Meta:
+
+            initial_state = 'one'
+            transitions = {
+                'one': ['two', 'three'],
+                'two': ['one', 'three'],
+                'three': ['two', 'three'],
+            }
+            named_checkers = [
+                ('can_go_to_one', 'one'),
+                ('can_become_two', StatesEnum.TWO),
+            ]
+
+        @property
+        def can_one(self):
+            return self.can_be_('one')
+
+    sm = Machine()
+    sm.set_two()
+    assert sm.can_be_one is True
+    assert sm.can_one is True
+    assert sm.can_go_to_one is True
+    assert sm.can_become_two is False
+
+
+def test_named_transitions_checkers_cant_overwrite_methods():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             States = StatesEnum
 
             class Meta:
 
-                transitions = {
-                    'o': ['tw', 'th'],
-                    'tw': ['o', 'th'],
-                    'th': ['tw'],
-                }
-
-        sm = Machine()
-        self.assertIsNone(sm.state)
-        sm.set_one()
-        self.assertIs(sm.is_one, True)
-        sm.set_two()
-        sm.set_three()
-
-        self.assertRaises(errors.TransitionError, sm.set_one)
-        self.assertIs(sm.is_three, True)
-
-        self.assertRaises(errors.TransitionError, sm.set_, 'one')
-        self.assertIs(sm.is_three, True)
-
-    def test_transitions_checkers(self):
-
-        class Machine(machines.StateMachine):
-
-            States = StatesEnum
-
-            class Meta:
-
-                transitions = {
-                    'o': ['tw', 'th'],
-                    'tw': ['o', 'th'],
-                    'th': ['tw', 'th'],
-                }
-
-        sm = Machine()
-        self.assertIs(sm.can_be_('one'), True)
-        self.assertIs(sm.can_be_('two'), True)
-        self.assertIs(sm.can_be_('three'), True)
-        self.assertIs(sm.can_be_('four'), True)
-        self.assertIs(sm.can_be_one, True)
-        self.assertIs(sm.can_be_two, True)
-        self.assertIs(sm.can_be_three, True)
-        self.assertIs(sm.can_be_four, True)
-
-        sm.set_one()
-        self.assertIs(sm.can_be_one, False)
-        self.assertIs(sm.can_be_two, True)
-        self.assertIs(sm.can_be_three, True)
-        self.assertIs(sm.can_be_four, False)
-
-        self.assertRaises(errors.TransitionError, sm.set_one)
-
-        sm.set_two()
-        self.assertIs(sm.can_be_one, True)
-        self.assertIs(sm.can_be_two, False)
-        self.assertIs(sm.can_be_three, True)
-        self.assertIs(sm.can_be_four, False)
-
-        sm.set_three()
-        self.assertIs(sm.can_be_one, False)
-        self.assertIs(sm.can_be_two, True)
-        self.assertIs(sm.can_be_three, True)
-        self.assertIs(sm.can_be_four, False)
-
-        sm.set_three()
-
-    def test_transitions_checkers_with_complete_graph(self):
-
-        class Machine(machines.StateMachine):
-
-            States = StatesEnum
-
-            class Meta:
-
-                complete = True
-                transitions = {
-                    'o': ['tw', 'th'],
-                    'tw': ['o', 'th'],
-                    'th': ['tw', 'th'],
-                }
-
-        sm = Machine()
-        sm.set_three()
-        self.assertIs(sm.can_be_one, True)
-        self.assertIs(sm.can_be_two, True)
-        self.assertIs(sm.can_be_three, True)
-        self.assertIs(sm.can_be_four, True)
-        sm.set_four()
-        self.assertIs(sm.is_four, True)
-
-    def test_named_transitions_checkers(self):
-
-        class Machine(machines.StateMachine):
-
-            States = StatesEnum
-
-            class Meta:
-
-                transitions = {
-                    'o': ['tw', 'th'],
-                    'tw': ['o', 'th'],
-                    'th': ['tw', 'th'],
-                }
                 named_checkers = [
-                    ('can_go_to_one', 'one'),
-                    ('can_become_two', StatesEnum.TWO),
+                    ('can_one', 'one'),
                 ]
 
             @property
             def can_one(self):
                 return self.can_be_('one')
 
-        sm = Machine()
-        sm.set_two()
-        self.assertIs(sm.can_be_one, True)
-        self.assertIs(sm.can_one, True)
-        self.assertIs(sm.can_go_to_one, True)
-        self.assertIs(sm.can_become_two, False)
 
-    def test_named_transitions_checkers_cant_overwrite_methods(self):
-        try:
+def test_named_checkers_cant_overwrite_generated_methods():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
 
-            class Machine(machines.StateMachine):
+            States = StatesEnum
 
-                States = StatesEnum
+            class Meta:
 
-                class Meta:
+                named_checkers = [
+                    ('can_be_one', 'one'),
+                ]
 
-                    named_checkers = [
-                        ('can_one', 'one'),
-                    ]
+            @property
+            def can_one(self):
+                return self.can_be_('one')
 
-                @property
-                def can_one(self):
-                    return self.can_be_('one')
 
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
+def test_named_checkers_dont_accept_wrong_values():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
 
-    def test_named_checkers_cant_overwrite_generated_methods(self):
-        try:
+            States = StatesEnum
 
-            class Machine(machines.StateMachine):
+            class Meta:
 
-                States = StatesEnum
+                named_checkers = [
+                    ('can_become_five', 'five'),
+                ]
 
-                class Meta:
+            @property
+            def can_one(self):
+                return self.can_be_('one')
 
-                    named_checkers = [
-                        ('can_be_one', 'one'),
-                    ]
 
-                @property
-                def can_one(self):
-                    return self.can_be_('one')
+def test_named_checkers_dont_accept_wrong_enums():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
 
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
+            States = StatesEnum
 
-    def test_named_checkers_dont_accept_wrong_values(self):
-        try:
+            class Meta:
 
-            class Machine(machines.StateMachine):
+                named_checkers = [
+                    ('can_be_other_one', OtherEnum.ONE),
+                ]
 
-                States = StatesEnum
+            @property
+            def can_one(self):
+                return self.can_be_('one')
 
-                class Meta:
 
-                    named_checkers = [
-                        ('can_become_five', 'five'),
-                    ]
-
-                @property
-                def can_one(self):
-                    return self.can_be_('one')
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_named_checkers_dont_accept_wrong_enums(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    named_checkers = [
-                        ('can_be_other_one', OtherEnum.ONE),
-                    ]
-
-                @property
-                def can_one(self):
-                    return self.can_be_('one')
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_transitions_with_wrong_enum(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    transitions = {
-                        OtherEnum.ONE: [StatesEnum.TWO, StatesEnum.THREE],
-                        StatesEnum.TWO: [StatesEnum.ONE, StatesEnum.THREE],
-                        StatesEnum.THREE: [StatesEnum.TWO],
-                    }
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_transition_graph_is_complete(self):
-
+def test_transitions_with_wrong_enum():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             States = StatesEnum
@@ -302,19 +232,47 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
             class Meta:
 
                 transitions = {
-                    'th': ['f'],
+                    OtherEnum.ONE: [StatesEnum.TWO, StatesEnum.THREE],
+                    StatesEnum.TWO: [StatesEnum.ONE, StatesEnum.THREE],
+                    StatesEnum.THREE: [StatesEnum.TWO],
                 }
 
-        sm = Machine()
-        self.assertIs(sm.can_be_four, True)
-        sm.set_four()
-        self.assertIs(sm.can_be_three, False)
 
-    def test_named_transitions(self):
+def test_named_transitions():
 
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = 'one'
+
+        class Meta:
+
+            transitions = {
+                'one': ['two', 'three'],
+                'two': ['one', 'three'],
+                'three': ['two', 'three'],
+            }
+            named_transitions = [
+                ('run', 'two'),
+                ('confirm', 'three'),
+                ('cancel', StatesEnum.FOUR),
+            ]
+
+    sm = Machine()
+    sm.run()
+    assert sm.is_two is True
+    sm.confirm()
+    assert sm.is_three is True
+    sm.cancel()
+    assert sm.is_four is True
+
+
+def test_named_transitions_collisions():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             States = StatesEnum
+            state = 'one'
 
             class Meta:
 
@@ -326,129 +284,112 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
                 named_transitions = [
                     ('run', 'one'),
                     ('confirm', 'two'),
-                    ('cancel', StatesEnum.THREE),
+                    ('cancel', 'three'),
                 ]
 
-        sm = Machine()
-        self.assertIsNone(sm.state)
-        sm.run()
-        self.assertIs(sm.is_one, True)
-        sm.confirm()
-        self.assertIs(sm.is_two, True)
-        sm.cancel()
-        self.assertIs(sm.is_three, True)
+            def run():
+                pass
 
-    def test_named_transitions_collisions(self):
-        try:
 
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    transitions = {
-                        'o': ['tw', 'th'],
-                        'tw': ['o', 'th'],
-                        'th': ['tw'],
-                    }
-                    named_transitions = [
-                        ('run', 'one'),
-                        ('confirm', 'two'),
-                        ('cancel', 'three'),
-                    ]
-
-                def run(self):
-                    pass
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_named_transitions_collisions_with_auto_generated_methods(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    named_transitions = [
-                        ('is_one', 'one'),
-                        ('confirm', 'two'),
-                        ('cancel', 'three'),
-                    ]
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_named_transitions_wrong_value(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    named_transitions = [
-                        ('run', 'five'),
-                        ('confirm', 'two'),
-                        ('cancel', 'three'),
-                    ]
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_named_transitions_wrong_enum(self):
-        try:
-
-            class Machine(machines.StateMachine):
-
-                States = StatesEnum
-
-                class Meta:
-
-                    named_transitions = [
-                        ('run', OtherEnum.ONE),
-                        ('confirm', 'two'),
-                        ('cancel', 'three'),
-                    ]
-
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
-
-    def test_named_transitions_are_in_state_graph(self):
-
+def test_named_transitions_collisions_with_auto_generated_methods():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             States = StatesEnum
+            state = 'one'
 
             class Meta:
 
                 named_transitions = [
-                    ('run', 'one'),
+                    ('is_one', 'one'),
                     ('confirm', 'two'),
                     ('cancel', 'three'),
                 ]
 
-        sm = Machine()
-        sm.set_one()
-        self.assertIs(sm.can_be_one, True)
-        self.assertIs(sm.can_be_two, True)
-        self.assertIs(sm.can_be_three, True)
-        self.assertIs(sm.can_be_four, False)
 
-    def test_named_transitions_with_restricted_source(self):
+def test_named_transitions_wrong_value():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
 
+            States = StatesEnum
+            state = 'one'
+
+            class Meta:
+
+                named_transitions = [
+                    ('run', 'five'),
+                    ('confirm', 'two'),
+                    ('cancel', 'three'),
+                ]
+
+
+def test_named_transitions_wrong_enum():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
+
+            States = StatesEnum
+            state = 'one'
+
+            class Meta:
+
+                named_transitions = [
+                    ('run', OtherEnum.ONE),
+                    ('confirm', 'two'),
+                    ('cancel', 'three'),
+                ]
+
+
+def test_named_transitions_are_in_state_graph():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = 'one'
+
+        class Meta:
+
+            named_transitions = [
+                ('run', 'one'),
+                ('confirm', 'two'),
+                ('cancel', 'three'),
+            ]
+
+    sm = Machine()
+    assert sm.can_be_one is True
+    assert sm.can_be_two is True
+    assert sm.can_be_three is True
+    assert sm.can_be_four is False
+
+
+def test_named_transitions_with_restricted_source():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = 'one'
+
+        class Meta:
+
+            named_transitions = [
+                ('confirm', 'two', 'one'),
+                ('cancel', 'three', ['one', 'two']),
+                ('surprise', 'four', [])
+            ]
+
+    sm = Machine()
+    assert sm.can_be_two is True
+    assert sm.can_be_three is True
+    sm.confirm()
+    assert sm.can_be_one is False
+    assert sm.can_be_three is True
+    assert sm.can_be_four is False
+    assert sm.can_be_two is False
+    sm.cancel()
+    assert sm.is_three is True
+
+
+def test_restricted_source_proper_value():
+    with pytest.raises(ValueError):
         class Machine(machines.StateMachine):
 
             States = StatesEnum
@@ -459,60 +400,88 @@ class TestSuperStateMachineTransitions(unittest.TestCase):
                     ('run', 'o', None),
                     ('confirm', 'two', 'o'),
                     ('cancel', 'three', ['o', 'tw']),
-                    ('surprise', 'four', [])
+                    ('surprise', 'four', ['five'])
                 ]
 
-        sm = Machine()
-        sm.run()
-        self.assertIs(sm.can_be_one, False)
-        self.assertIs(sm.can_be_two, True)
-        self.assertIs(sm.can_be_three, True)
-        sm.confirm()
-        self.assertIs(sm.can_be_one, False)
-        self.assertIs(sm.can_be_three, True)
-        self.assertIs(sm.can_be_four, False)
-        self.assertIs(sm.can_be_two, False)
-        sm.cancel()
-        self.assertIs(sm.is_three, True)
 
-    def test_restricted_source_proper_value(self):
-        try:
+def test_restricted_source_proper_enum():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
 
-            class Machine(machines.StateMachine):
+            States = StatesEnum
 
-                States = StatesEnum
+            class Meta:
 
-                class Meta:
+                named_transitions = [
+                    ('run', 'o', None),
+                    ('confirm', 'two', 'o'),
+                    ('cancel', 'three', ['o', 'tw']),
+                    ('surprise', 'four', OtherEnum.ONE)
+                ]
 
-                    named_transitions = [
-                        ('run', 'o', None),
-                        ('confirm', 'two', 'o'),
-                        ('cancel', 'three', ['o', 'tw']),
-                        ('surprise', 'four', ['five'])
-                    ]
 
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
+def test_force_set():
 
-    def test_restricted_source_proper_enum(self):
-        try:
+    class Machine(machines.StateMachine):
 
-            class Machine(machines.StateMachine):
+        States = StatesEnum
+        state = 'one'
 
-                States = StatesEnum
+        class Meta:
 
-                class Meta:
+            transitions = {
+                'one': ['two', 'three'],
+            }
 
-                    named_transitions = [
-                        ('run', 'o', None),
-                        ('confirm', 'two', 'o'),
-                        ('cancel', 'three', ['o', 'tw']),
-                        ('surprise', 'four', OtherEnum.ONE)
-                    ]
+    machine = Machine()
+    assert machine.can_be_four is False
+    with pytest.raises(errors.TransitionError):
+        machine.set_four()
+    assert machine.state == 'one'
+    machine.force_set('four')
+    assert machine.state == 'four'
 
-        except ValueError:
-            pass
-        else:
-            raise AssertionError('ValueError should be raised.')
+
+def test_force_set_name_collision():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
+
+            States = StatesEnum
+
+            def force_set():
+                pass
+
+
+def test_force_set_name_collision_with_generated_methods():
+    with pytest.raises(ValueError):
+        class Machine(machines.StateMachine):
+
+            States = StatesEnum
+
+            class Meta:
+
+                named_transitions = [
+                    ('force_set', 'one')
+                ]
+
+
+def test_force_set_accepts_only_proper_values():
+
+    class Machine(machines.StateMachine):
+
+        States = StatesEnum
+        state = StatesEnum.ONE
+
+        class Meta:
+
+            complete = False
+
+    machine = Machine()
+    assert machine.can_be_four is False
+    machine.force_set('four')
+    machine.force_set(StatesEnum.FOUR)
+    machine.force_set('four')
+    with pytest.raises(ValueError):
+        machine.force_set('fourtyfour')
+    with pytest.raises(ValueError):
+        machine.force_set(OtherEnum.ONE)

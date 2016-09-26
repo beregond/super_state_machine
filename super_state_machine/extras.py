@@ -1,5 +1,7 @@
 """Extra utilities for state machines, to make them more usable."""
 
+from weakref import WeakKeyDictionary
+
 
 class ProxyString(str):
 
@@ -22,32 +24,24 @@ class PropertyMachine(object):
 
     def __init__(self, machine_type):
         """Create descriptor."""
-        self._memory = {}
-        self._machine_type = machine_type
+        self.memory = WeakKeyDictionary()
+        self.machine_type = machine_type
 
-    def _check_machine(self, obj):
-        try:
-            machine = self._memory[obj]
-        except KeyError:
-            machine = self._machine_type()
-            self._memory[obj] = machine
-
-    def __set__(self, obj, value):
+    def __set__(self, instance, value):
         """Set state to machine."""
-        self._check_machine(obj)
-        self._memory[obj].set_(value)
+        self.check_memory(instance)
+        self.memory[instance].set_(value)
 
-    def __get__(self, obj, _type=None):
+    def __get__(self, instance, _type=None):
         """Get machine state."""
-        if obj is None:
+        if instance is None:
             return self
+        self.check_memory(instance)
+        machine = self.memory[instance]
+        return ProxyString(machine.actual_state.value, machine)
 
-        self._check_machine(obj)
-
-        machine = self._memory[obj]
+    def check_memory(self, instance):
         try:
-            actual_state = machine.actual_state.value
-        except AttributeError:
-            actual_state = ''
-
-        return ProxyString(actual_state, machine)
+            self.memory[instance]
+        except KeyError:
+            self.memory[instance] = self.machine_type()

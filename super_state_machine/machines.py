@@ -8,17 +8,7 @@ import six
 from . import utils
 
 
-def _get_config(original_meta, attr, default=[]):
-    for meta in [original_meta, DefaultMeta]:
-        try:
-            return getattr(meta, attr)
-        except AttributeError:
-            pass
-
-    if isinstance(default, list):
-        raise
-
-    return default
+NotSet = object()
 
 
 class DefaultMeta(object):
@@ -26,11 +16,9 @@ class DefaultMeta(object):
     """Default configuration values."""
 
     states_enum_name = 'States'
-    allow_empty = True
-    initial_state = None
 
 
-class _AttributeDict(dict):
+class AttributeDict(dict):
 
     def __setattr__(self, key, value):
         self[key] = value
@@ -55,6 +43,7 @@ class StateMachineMetaclass(type):
 
         cls._set_up_config_getter()
         cls._check_states_enum()
+        cls._check_if_states_are_strings()
         cls._set_up_translator()
         cls._calculate_state_name()
         cls._check_state_value()
@@ -74,7 +63,7 @@ class StateMachineMetaclass(type):
     @classmethod
     def _set_up_context(cls):
         """Create context to keep all needed variables in."""
-        cls.context = _AttributeDict()
+        cls.context = AttributeDict()
         cls.context.new_meta = {}
         cls.context.new_transitions = {}
         cls.context.new_methods = {}
@@ -101,23 +90,35 @@ class StateMachineMetaclass(type):
                 'Please provide enum instance to define available states.')
 
     @classmethod
+    def _check_if_states_are_strings(cls):
+        """Check if all states are strings."""
+        for item in list(cls.context.states_enum):
+            if not isinstance(item.value, six.string_types):
+                raise ValueError(
+                    'Item {} is not string. Only strings are allowed.'.format(
+                        item.name
+                    ))
+
+    @classmethod
     def _check_state_value(cls):
-        """Check initial state value - if is proper and translate it."""
-        state_value = cls.context.get_config('initial_state')
+        """Check initial state value - if is proper and translate it.
+
+        Initial state is required.
+        """
+        state_value = cls.context.get_config('initial_state', None)
         state_value = state_value or getattr(
-            cls.context.new_class, cls.context.state_name, None)
+            cls.context.new_class, cls.context.state_name, None
+        )
 
-        if state_value:
-            state_value = (
-                cls.context
-                .new_meta['translator']
-                .translate(state_value)
-            )
-
-        if not cls.context.get_config('allow_empty') and not state_value:
+        if not state_value:
             raise ValueError(
-                "Empty state is disallowed, yet no initial state is given!")
-
+                "Empty state is disallowed, yet no initial state is given!"
+            )
+        state_value = (
+            cls.context
+            .new_meta['translator']
+            .translate(state_value)
+        )
         cls.context.state_value = state_value
 
     @classmethod
@@ -175,6 +176,7 @@ class StateMachineMetaclass(type):
 
         cls.context.new_methods['actual_state'] = utils.actual_state
         cls.context.new_methods['as_enum'] = utils.as_enum
+        cls.context.new_methods['force_set'] = utils.force_set
 
     @classmethod
     def _generate_named_checkers(cls):
@@ -253,7 +255,7 @@ class StateMachineMetaclass(type):
     @classmethod
     def _set_up_config_getter(cls):
         meta = getattr(cls.context.new_class, 'Meta', DefaultMeta)
-        cls.context.get_config = partial(_get_config, meta)
+        cls.context.get_config = partial(get_config, meta)
 
     @classmethod
     def _set_up_translator(cls):
@@ -276,3 +278,16 @@ class StateMachineMetaclass(type):
 class StateMachine(six.with_metaclass(StateMachineMetaclass)):
 
     """State machine."""
+
+
+def get_config(original_meta, attribute, default=NotSet):
+    for meta in [original_meta, DefaultMeta]:
+        try:
+            return getattr(meta, attribute)
+        except AttributeError:
+            pass
+
+    if default is NotSet:
+        raise
+
+    return default
