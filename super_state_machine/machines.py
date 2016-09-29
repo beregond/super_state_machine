@@ -95,9 +95,9 @@ class StateMachineMetaclass(type):
         for item in list(cls.context.states_enum):
             if not isinstance(item.value, six.string_types):
                 raise ValueError(
-                    'Item {} is not string. Only strings are allowed.'.format(
-                        item.name
-                    ))
+                    'Item {name} is not string. Only strings are allowed.'
+                    .format(name=item.name)
+                )
 
     @classmethod
     def _check_state_value(cls):
@@ -164,13 +164,13 @@ class StateMachineMetaclass(type):
     def _generate_standard_methods(cls):
         """Generate standard setters, getters and checkers."""
         for state in cls.context.states_enum:
-            getter_name = 'is_{}'.format(state.value)
+            getter_name = 'is_{name}'.format(name=state.value)
             cls.context.new_methods[getter_name] = utils.generate_getter(state)
 
-            setter_name = 'set_{}'.format(state.value)
+            setter_name = 'set_{name}'.format(name=state.value)
             cls.context.new_methods[setter_name] = utils.generate_setter(state)
 
-            checker_name = 'can_be_{}'.format(state.value)
+            checker_name = 'can_be_{name}'.format(name=state.value)
             checker = utils.generate_checker(state)
             cls.context.new_methods[checker_name] = checker
 
@@ -184,8 +184,10 @@ class StateMachineMetaclass(type):
         for method, key in named_checkers:
             if method in cls.context.new_methods:
                 raise ValueError(
-                    "Name collision for named checker '{}' - this name is "
-                    "reserved for other auto generated method.".format(method))
+                    "Name collision for named checker '{checker}' - this "
+                    "name is reserved for other auto generated method."
+                    .format(checker=method)
+                )
 
             key = cls.context.new_meta['translator'].translate(key)
             cls.context.new_methods[method] = utils.generate_checker(key.value)
@@ -201,8 +203,10 @@ class StateMachineMetaclass(type):
 
             if method in cls.context.new_methods:
                 raise ValueError(
-                    "Name collision for transition '{}' - this name is "
-                    "reserved for other auto generated method.".format(method))
+                    "Name collision for transition '{transition}' - this name "
+                    "is reserved for other auto generated method."
+                    .format(transition=method)
+                )
 
             key = translator.translate(key)
             cls.context.new_methods[method] = utils.generate_setter(key)
@@ -233,8 +237,9 @@ class StateMachineMetaclass(type):
         for name, method in cls.context.new_methods.items():
             if hasattr(cls.context.new_class, name):
                 raise ValueError(
-                    "Name collision in state machine class - '{}'."
-                    .format(name))
+                    "Name collision in state machine class - '{name}'."
+                    .format(name)
+                )
 
             setattr(cls.context.new_class, name, method)
 

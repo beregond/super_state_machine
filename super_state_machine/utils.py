@@ -41,8 +41,9 @@ def set_(self, state):
     if not self.can_be_(state):
         state = self._meta['translator'].translate(state)
         raise TransitionError(
-            "Cannot transit from '{}' to '{}'.".format(
-                self.actual_state.value, state.value))
+            "Cannot transit from '{actual_value}' to '{value}'."
+            .format(actual_value=self.actual_state.value, value=state.value)
+        )
 
     self.force_set(state)
 
@@ -119,9 +120,9 @@ class EnumValueTranslator(object):
         self.generate_search_table()
 
     def generate_search_table(self):
-        self.search_table = {
-            item.value: item for item in list(self.base_enum)
-        }
+        self.search_table = dict(
+            (item.value, item) for item in list(self.base_enum)
+        )
 
     def translate(self, value):
         """Translate value to enum instance.
@@ -145,7 +146,7 @@ class EnumValueTranslator(object):
             if value in self.base_enum:
                 return True
             raise ValueError(
-                "Given value ('{}') doesn't belong to states enum."
-                .format(value)
+                "Given value ('{value}') doesn't belong to states enum."
+                .format(value=value)
             )
         return False

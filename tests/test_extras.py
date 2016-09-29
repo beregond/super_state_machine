@@ -13,10 +13,10 @@ class Lock(machines.StateMachine):
     class Meta:
         allow_empty = False
         initial_state = 'open'
-        named_transitions = {
+        named_transitions = [
             ('lock', 'locked'),
             ('open', 'open'),
-        }
+        ]
 
 
 def test_property_machine():
