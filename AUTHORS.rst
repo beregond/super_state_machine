@@ -10,4 +10,7 @@ Development Lead
 Contributors
 ------------
 
-None yet. Why not be the first?
+(In alphabetical order)
+
+* Eric Dill <eric.dill@maxpoint.com>
+* Thomas A Caswell <tcaswell@gmail.com>
