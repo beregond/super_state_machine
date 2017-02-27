@@ -37,6 +37,12 @@ class PyTest(TestCommand):
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
+if sys.version_info < (3, 4):
+    compat_req = ['six', 'enum34']
+else:
+    compat_req = ['six']
+
+
 setup(
     name='super_state_machine',
     version=version,
@@ -53,10 +59,7 @@ setup(
     ],
     package_dir={'super_state_machine': 'super_state_machine'},
     include_package_data=True,
-    install_requires=[
-        'enum34',
-        'six',
-    ],
+    install_requires=compat_req,
     license="BSD",
     zip_safe=False,
     keywords='super_state_machine',
