@@ -3,6 +3,18 @@
 History
 -------
 
+2.0.2 (2017-03-13)
+++++++++++++++++++
+
+* Fixed requirements for Python > 3.4.
+
+2.0.1 (2017-02-27)
+++++++++++++++++++
+
+* Remove enum34 for Python > 3.4.
+* Added support for Python 2.6.
+
+
 2.0 (2016-09-26)
 ++++++++++++++++
 
