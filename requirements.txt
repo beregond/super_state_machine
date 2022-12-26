@@ -13,4 +13,4 @@ pytest-cov==2.3.1
 pyhistory==1.2.1
 tox==1.7.2
 virtualenv==1.11.6
-wheel==0.23.0
+wheel==0.38.1
