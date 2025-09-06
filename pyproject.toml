@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "super_state_machine"
-license = "BSD"
+license = "MIT AND (Apache-2.0 OR BSD-2-Clause)"
 dynamic = ["version"]
 readme = "README.rst"
 classifiers = [
@@ -20,7 +20,7 @@ classifiers = [
 authors = [{ name = "Szczepan Cieślik", email = "szczepan.cieslik@gmail.com" }]
 maintainers = [
   { name = "Eric Dill", email = "eric.dill@maxpoint.com" },
-  { name= "Thomas A Caswell", email = "tcaswell@gmail.com" },
+  { name = "Thomas A Caswell", email = "tcaswell@gmail.com" },
 ]
 
 [project.optional-dependencies]
