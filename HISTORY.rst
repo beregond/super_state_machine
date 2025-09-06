@@ -3,6 +3,14 @@
 History
 -------
 
+2.1.0 (2025-09-06)
+++++++++++++++++++
+
+* Removed support for Python 2.7, 3.3 and 3.4.
+* Removed support for PyPy.
+* Added support for Python 3.9, 3.10, 3.11, 3.12 and 3.13.
+* Modernized packages (use pyproject.toml and hatchling).
+
 2.0.2 (2017-03-13)
 ++++++++++++++++++
 

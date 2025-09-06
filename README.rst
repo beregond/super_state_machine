@@ -120,7 +120,7 @@ Features
   >>> from super_state_machine import machines, extras
 
 
-  >>> class Lock(machine.StateMachine):
+  >>> class Lock(machines.StateMachine):
 
   ...     class States(Enum):
   ...
