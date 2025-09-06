@@ -227,9 +227,7 @@ class StateMachineMetaclass(type):
         """Add all generated methods to result class."""
         for name, method in cls.context.new_methods.items():
             if hasattr(cls.context.new_class, name):
-                raise ValueError(
-                    "Name collision in state machine class - '{name}'.".format(name)
-                )
+                raise ValueError("Name collision in state machine class - '{name}'.")
 
             setattr(cls.context.new_class, name, method)
 
