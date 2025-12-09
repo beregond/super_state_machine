@@ -1,10 +1,6 @@
 # Super State Machine
 
-[![PyPI version](https://badge.fury.io/py/super-state-machine.svg)](https://badge.fury.io/py/super-state-machine)
-
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/beregond/super_state_machine/test.yml)
-
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/super-state-machine?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/super-state-machine)
+[![PyPI version](https://badge.fury.io/py/super-state-machine.svg)](https://badge.fury.io/py/super-state-machine) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/beregond/super_state_machine/test.yml) [![PyPI Downloads](https://static.pepy.tech/personalized-badge/super-state-machine?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/super-state-machine)
 
 Super State Machine gives you utilities to build finite state machines.
 
