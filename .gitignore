@@ -2,9 +2,6 @@
 
 src/super_state_machine/_version.py
 
-# C extensions
-*.so
-
 # Packages
 *.egg
 *.egg-info
@@ -19,11 +16,10 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+uv.lock
 
 # Unit test / coverage reports
 .coverage
-.tox
-nosetests.xml
 htmlcov
 
 # Complexity
