@@ -30,8 +30,8 @@ jobs:
       - uses: actions/checkout@v7
       # Ruff version comes from the `ruff==` pin in pyproject.toml (dev extra).
       - name: Ruff check
-        uses: astral-sh/ruff-action@v4
+        uses: astral-sh/ruff-action@v4.1.0
       - name: Ruff format
-        uses: astral-sh/ruff-action@v4
+        uses: astral-sh/ruff-action@v4.1.0
         with:
           args: "format --check --diff"
