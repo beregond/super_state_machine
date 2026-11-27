@@ -17,7 +17,7 @@ class ProxyString(str):
         return getattr(self.state_machine, name)
 
 
-class PropertyMachine(object):
+class PropertyMachine:
     """Descriptor to help using machines as properties."""
 
     def __init__(self, machine_type):

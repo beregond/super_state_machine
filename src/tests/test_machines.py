@@ -1,5 +1,6 @@
-import pytest
 from enum import Enum
+
+import pytest
 
 from super_state_machine import machines
 
@@ -73,7 +74,7 @@ def test_state_machine_accepts_only_unique_enums():
         class Machine(machines.StateMachine):
             class States(Enum):
                 ONE = "one"
-                TWO = "one"
+                TWO = "one"  # noqa: PIE796 - duplicate value is under test
                 THREE = "three"
 
 
@@ -360,3 +361,11 @@ def test_state_machine_allows_only_strings():
                 ONE = 1
                 TWO = "two"
                 THREE = "three"
+
+
+def test_get_config_raises_attribute_error_when_missing_without_default():
+    class Meta:
+        pass
+
+    with pytest.raises(AttributeError):
+        machines.get_config(Meta, "no_such_option")

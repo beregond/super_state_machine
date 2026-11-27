@@ -83,9 +83,11 @@ def test_state_assignment_logs(caplog):
 
 def test_rejected_transition_does_not_log(caplog):
     task = Task()
-    with caplog.at_level(logging.DEBUG, logger="super_state_machine"):
-        with pytest.raises(TransitionError):
-            task.set_done()
+    with (
+        caplog.at_level(logging.DEBUG, logger="super_state_machine"),
+        pytest.raises(TransitionError),
+    ):
+        task.set_done()
     assert records(caplog) == []
 
 

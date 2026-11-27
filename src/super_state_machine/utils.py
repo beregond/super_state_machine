@@ -52,9 +52,7 @@ def set_(self, state):
     if not self.can_be_(state):
         state = self._meta["translator"].translate(state)
         raise TransitionError(
-            "Cannot transit from '{actual_value}' to '{value}'.".format(
-                actual_value=self.actual_state.value, value=state.value
-            )
+            f"Cannot transit from '{self.actual_state.value}' to '{state.value}'."
         )
 
     self.force_set(state)
@@ -121,7 +119,7 @@ def as_enum(self):
     return self.actual_state
 
 
-class EnumValueTranslator(object):
+class EnumValueTranslator:
     """Helps to find enum element by its value."""
 
     def __init__(self, base_enum):
@@ -135,7 +133,7 @@ class EnumValueTranslator(object):
         self.generate_search_table()
 
     def generate_search_table(self):
-        self.search_table = dict((item.value, item) for item in list(self.base_enum))
+        self.search_table = {item.value: item for item in self.base_enum}
 
     def translate(self, value):
         """Translate value to enum instance.
@@ -150,17 +148,11 @@ class EnumValueTranslator(object):
         try:
             return self.search_table[value]
         except KeyError:
-            raise ValueError(
-                "Value {value} doesn't match any state.".format(value=value)
-            )
+            raise ValueError(f"Value {value} doesn't match any state.")
 
     def _check_if_already_proper(self, value):
         if isinstance(value, Enum):
             if value in self.base_enum:
                 return True
-            raise ValueError(
-                "Given value ('{value}') doesn't belong to states enum.".format(
-                    value=value
-                )
-            )
+            raise ValueError(f"Given value ('{value}') doesn't belong to states enum.")
         return False

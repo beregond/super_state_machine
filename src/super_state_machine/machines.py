@@ -5,11 +5,10 @@ from functools import partial
 
 from . import utils
 
-
 NotSet = object()
 
 
-class DefaultMeta(object):
+class DefaultMeta:
     """Default configuration values."""
 
     states_enum_name = "States"
@@ -89,10 +88,8 @@ class StateMachineMetaclass(type):
         """Check if all states are strings."""
         for item in list(cls.context.states_enum):
             if not isinstance(item.value, str):
-                raise ValueError(
-                    "Item {name} is not string. Only strings are allowed.".format(
-                        name=item.name
-                    )
+                raise ValueError(  # noqa: TRY004 - public API raises ValueError
+                    f"Item {item.name} is not string. Only strings are allowed."
                 )
 
     @classmethod
@@ -127,9 +124,9 @@ class StateMachineMetaclass(type):
         )
         setattr(cls.context.new_class, cls.context.state_name, utils.state_property)
 
-        setattr(cls.context.new_class, "is_", utils.is_)
-        setattr(cls.context.new_class, "can_be_", utils.can_be_)
-        setattr(cls.context.new_class, "set_", utils.set_)
+        cls.context.new_class.is_ = utils.is_
+        cls.context.new_class.can_be_ = utils.can_be_
+        cls.context.new_class.set_ = utils.set_
 
     @classmethod
     def _generate_standard_transitions(cls):
@@ -154,13 +151,13 @@ class StateMachineMetaclass(type):
     def _generate_standard_methods(cls):
         """Generate standard setters, getters and checkers."""
         for state in cls.context.states_enum:
-            getter_name = "is_{name}".format(name=state.value)
+            getter_name = f"is_{state.value}"
             cls.context.new_methods[getter_name] = utils.generate_getter(state)
 
-            setter_name = "set_{name}".format(name=state.value)
+            setter_name = f"set_{state.value}"
             cls.context.new_methods[setter_name] = utils.generate_setter(state)
 
-            checker_name = "can_be_{name}".format(name=state.value)
+            checker_name = f"can_be_{state.value}"
             checker = utils.generate_checker(state)
             cls.context.new_methods[checker_name] = checker
 
@@ -174,10 +171,8 @@ class StateMachineMetaclass(type):
         for method, key in named_checkers:
             if method in cls.context.new_methods:
                 raise ValueError(
-                    "Name collision for named checker '{checker}' - this "
-                    "name is reserved for other auto generated method.".format(
-                        checker=method
-                    )
+                    f"Name collision for named checker '{method}' - this "
+                    "name is reserved for other auto generated method."
                 )
 
             key = cls.context.new_meta["translator"].translate(key)
@@ -193,10 +188,8 @@ class StateMachineMetaclass(type):
 
             if method in cls.context.new_methods:
                 raise ValueError(
-                    "Name collision for transition '{transition}' - this name "
-                    "is reserved for other auto generated method.".format(
-                        transition=method
-                    )
+                    f"Name collision for transition '{method}' - this name "
+                    "is reserved for other auto generated method."
                 )
 
             key = translator.translate(key)
@@ -218,7 +211,7 @@ class StateMachineMetaclass(type):
             if from_values is None:
                 from_values = []
             if not isinstance(from_values, list):
-                from_values = list((from_values,))
+                from_values = [from_values]
 
         return method, key, from_values
 
@@ -265,7 +258,7 @@ class StateMachineMetaclass(type):
     def _complete_meta_for_new_class(cls):
         cls.context.new_meta["transitions"] = cls.context.new_transitions
         cls.context.new_meta["config_getter"] = cls.context["get_config"]
-        setattr(cls.context.new_class, "_meta", cls.context["new_meta"])
+        cls.context.new_class._meta = cls.context["new_meta"]
 
 
 class StateMachine(metaclass=StateMachineMetaclass):
@@ -280,6 +273,8 @@ def get_config(original_meta, attribute, default=NotSet):
             pass
 
     if default is NotSet:
-        raise
+        raise AttributeError(
+            f"Meta has no attribute '{attribute}' and there is no default for it."
+        )
 
     return default
