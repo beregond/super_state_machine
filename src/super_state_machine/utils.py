@@ -1,9 +1,12 @@
 """Utilities for core."""
 
+import logging
 from enum import Enum, unique
 from functools import wraps
 
 from .errors import TransitionError
+
+logger = logging.getLogger(__name__)
 
 
 def is_(self, state):
@@ -33,7 +36,15 @@ def force_set(self, state):
     translator = self._meta["translator"]
     state = translator.translate(state)
     attr = self._meta["state_attribute_name"]
+    old = self.actual_state
     setattr(self, attr, state)
+    logger.debug(
+        "%s (id=%s): %s -> %s",
+        type(self).__name__,
+        id(self),
+        old.value if old is not None else None,
+        state.value,
+    )
 
 
 def set_(self, state):
