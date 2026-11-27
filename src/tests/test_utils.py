@@ -1,5 +1,6 @@
-import pytest
 from enum import Enum
+
+import pytest
 
 from super_state_machine import utils
 
@@ -18,7 +19,7 @@ class OtherEnum(Enum):
 class NonUniqueEnum(Enum):
     ONE = "one"
     TWO = "two"
-    THREE = "one"
+    THREE = "one"  # noqa: PIE796 - duplicate value is under test
 
 
 class CollidingEnum(Enum):

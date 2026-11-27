@@ -24,7 +24,7 @@ maintainers = [
 ]
 
 [project.optional-dependencies]
-dev = ["coverage", "mccabe", "pytest", "pytest-cov"]
+dev = ["coverage", "mccabe", "pytest", "pytest-cov", "ruff==0.17.6"]
 docs = ["sphinx", "sphinx-mdinclude"]
 
 [tool.hatch.version]
@@ -35,3 +35,11 @@ default-version = "0.0.0"
 
 [tool.versioningit.write]
 file = "src/super_state_machine/_version.py"
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint.per-file-ignores]
+# `class Meta:` holds the state machine's declarative config (transitions,
+# named_transitions, ...), not mutable instance defaults.
+"src/tests/**" = ["RUF012"]

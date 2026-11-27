@@ -157,3 +157,20 @@ states, ``None`` or empty list won't add anything beyond defined ones.
   >>> safe.is_open
   True
   ```
+
+## Logging
+
+State changes are logged with the standard library `logging` module at
+`DEBUG` level, using loggers under the `super_state_machine` name. Logging is
+off by default (the package installs a `NullHandler`). To enable it:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+# or attach your own handler:
+logging.getLogger("super_state_machine").addHandler(logging.StreamHandler())
+```
+
+Each record contains the class name, instance id and the old and new state,
+for example `Task (id=140...): draft -> scheduled`.

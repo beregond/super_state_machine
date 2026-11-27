@@ -1,7 +1,8 @@
-import pytest
 from enum import Enum
 
-from super_state_machine import machines, errors
+import pytest
+
+from super_state_machine import errors, machines
 
 
 class StatesEnum(Enum):

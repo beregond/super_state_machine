@@ -1,0 +1,1 @@
+Added standard library logging of state changes (DEBUG, logger ``super_state_machine``).

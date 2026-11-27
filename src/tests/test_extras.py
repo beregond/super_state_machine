@@ -18,7 +18,7 @@ class Lock(machines.StateMachine):
 
 
 def test_property_machine():
-    class Door(object):
+    class Door:
         lock1 = extras.PropertyMachine(Lock)
         lock2 = extras.PropertyMachine(Lock)
 
