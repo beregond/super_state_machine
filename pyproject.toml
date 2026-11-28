@@ -7,16 +7,16 @@ name = "super_state_machine"
 license = "MIT AND (Apache-2.0 OR BSD-2-Clause)"
 dynamic = ["version"]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: BSD License",
   "Natural Language :: English",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
 ]
 authors = [{ name = "Szczepan Cieślik", email = "szczepan.cieslik@gmail.com" }]
 maintainers = [
@@ -38,7 +38,7 @@ default-version = "0.0.0"
 file = "src/super_state_machine/_version.py"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint.per-file-ignores]
 # `class Meta:` holds the state machine's declarative config (transitions,

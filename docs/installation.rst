@@ -2,7 +2,7 @@
 Installation
 ============
 
-Super State Machine supports Python 3.10 to 3.14 and has no runtime
+Super State Machine supports Python 3.11 to 3.15 and has no runtime
 dependencies.
 
 Install it from PyPI::
