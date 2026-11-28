@@ -3,6 +3,13 @@
 History
 -------
 
+2.1.1 (2026-11-28)
+++++++++++++++++++
+
+* Added support for Python 3.14 and 3.15.
+* Removed support for Python 3.9 and 3.10.
+* Added standard library logging of state changes.
+
 2.1.0 (2025-09-06)
 ++++++++++++++++++
 
