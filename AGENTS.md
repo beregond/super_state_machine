@@ -40,6 +40,7 @@
 
 ## Gotchas
 - `_version.py` is generated; do not edit.
+- versioningit needs git tags. Read the Docs clones shallow without tags, so `.readthedocs.yaml` has a `post_checkout` job (`git fetch --unshallow`, `git fetch --tags`); without it the docs title shows `0.0.0`.
 - Local ruff installs (e.g. pyenv `ssm`, 0.12.12) may differ from the CI pin. Always lint with `uvx ruff@<pinned version>`.
 - pyhistory is not a declared dependency. `.venv/bin/pyhistory` is a broken shim (ModuleNotFoundError), and pyenv `pyhi` fails on a missing `toml`. `PYENV_VERSION=pyhi2` (or `pyhi3`) works.
 - The package is not installed in the default Python; use `PYTHONPATH=src` for ad-hoc runs. `python -m pytest -q src` works as is.

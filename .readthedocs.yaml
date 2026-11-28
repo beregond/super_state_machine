@@ -7,6 +7,12 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.13"
+  jobs:
+    # RTD clones shallow and without tags; versioningit needs them, or the
+    # version (and the docs title) falls back to 0.0.0.
+    post_checkout:
+      - git fetch --unshallow || true
+      - git fetch --tags
 
 sphinx:
   configuration: docs/conf.py
