@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Build the Sphinx docs and serve them on http://localhost:PORT (default 8000).
+#
+# Usage: serve-docs [PORT]
+set -euo pipefail
+
+port="${1:-8000}"
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+out="$root/docs/_build/html"
+
+cd "$root"
+uv run --extra docs sphinx-build -W -b html docs "$out"
+
+echo "Serving docs at http://localhost:$port (Ctrl+C to stop)"
+exec uv run python -m http.server "$port" --bind 127.0.0.1 --directory "$out"
