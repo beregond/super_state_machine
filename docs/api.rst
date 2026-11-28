@@ -1,11 +1,11 @@
-API
-===
-
-Contents:
+=============
+API reference
+=============
 
 .. toctree::
+   :maxdepth: 1
 
-    api/machines
-    api/utils
-    api/extras
-    api/errors
+   api/machines
+   api/extras
+   api/utils
+   api/errors
