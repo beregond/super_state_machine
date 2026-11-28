@@ -31,7 +31,7 @@ The examples in the documentation are doctests::
 
     $ python -m pytest --doctest-glob="*.rst" docs
 
-CI runs the tests on Python 3.10 to 3.14.
+CI runs the tests on Python 3.11 to 3.15.
 
 Lint
 ----
